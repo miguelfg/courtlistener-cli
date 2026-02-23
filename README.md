@@ -42,6 +42,9 @@ courtlistener-cli opinions get 123456
 
 # Export to XLSX
 courtlistener-cli opinions list --format xlsx --output ./results/
+
+# Batch dockets list from CSV/XLSX (first sheet for XLSX)
+courtlistener-cli dockets list output/results.xlsx --column docketNumber
 ```
 
 ### 3. Batch Processing
