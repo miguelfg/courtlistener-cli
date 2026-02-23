@@ -51,8 +51,8 @@ run:
 opinions-list:
 	uv run $(PROJECT_NAME) opinions list --limit 10 --format json
 
-opinions-search-firearm-serial:
-	uv run $(PROJECT_NAME) opinions list --search '"serial number" "firearm"' --limit 10 --format json
+search-firearm-serial:
+	uv run $(PROJECT_NAME) search query --q '"serial number" "firearm"' --limit 100 --format xlsx
 
 opinions-get:
 	uv run $(PROJECT_NAME) opinions get 123456
