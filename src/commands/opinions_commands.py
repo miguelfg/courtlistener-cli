@@ -49,14 +49,14 @@ def list_opinions(limit, offset, search, output_format, output_path):
             click.echo(f"✓ Saved {len(result['results'])} opinions to {filepath}")
         else:
             click.echo("No results found")
-
     except Exception as e:
-        click.echo(
-            "Error: Unable to list opinions. "
-            "Set COURTLISTENER_API_TOKEN to a valid token and retry.",
-            err=True,
-        )
-        click.echo(f"Details: {e}", err=True)
+        error = str(e)
+        if "401" in error or "Unauthorized" in error:
+            click.echo(
+                "Authentication failed. Set COURTLISTENER_API_TOKEN with your API token."
+            )
+        else:
+            click.echo(f"Error: {error}")
         raise SystemExit(1)
 
 

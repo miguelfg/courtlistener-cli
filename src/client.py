@@ -20,11 +20,8 @@ class CourtListenerClient:
             'Content-Type': 'application/json',
             'User-Agent': 'courtlistener-cli/1.0.0'
         }
-
-        token = (self.api_token or '').strip()
-        if token:
-            headers['Authorization'] = f'Bearer {token}'
-
+        if self.api_token:
+            headers['Authorization'] = f'Bearer {self.api_token}'
         return headers
     
     def request(self, method: str, endpoint: str, **kwargs) -> Dict[str, Any]:

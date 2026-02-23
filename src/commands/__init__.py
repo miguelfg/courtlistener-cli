@@ -1,1 +1,1 @@
-"""Click command groups for CourtListener resources"""
+"""Click command groups for CourtListener resources."""
