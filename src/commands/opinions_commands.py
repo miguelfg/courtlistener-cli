@@ -4,6 +4,7 @@ import click
 import json
 from ..client import CourtListenerClient
 from ..output import save_json, save_csv, save_xlsx
+from ..pagination import paginate_endpoint
 from pathlib import Path
 
 
@@ -14,7 +15,10 @@ def opinions():
 
 
 @opinions.command('list')
-@click.option('--limit', default=20, help='Number of results per page')
+@click.option('--limit', default=20, type=int,
+              help='Total results to export; use 0 with --max-pages 0 to export all results')
+@click.option('--max-pages', default=10, type=int,
+              help='Maximum pages to fetch (0 = no page cap)')
 @click.option('--offset', default=0, help='Pagination offset')
 @click.option('--search', default=None, help='Full-text search')
 @click.option('--format', 'output_format', default='json', 
@@ -23,32 +27,47 @@ def opinions():
 @click.option('--output', 'output_path', default='./output', 
               type=click.Path(),
               help='Output directory')
-def list_opinions(limit, offset, search, output_format, output_path):
+def list_opinions(limit, max_pages, offset, search, output_format, output_path):
     """List opinions with pagination"""
     client = CourtListenerClient()
     
-    params = {'limit': limit, 'offset': offset}
+    params = {'limit': 100 if limit == 0 else max(limit, 1), 'offset': offset}
     if search:
         params['search'] = search
     
     try:
-        result = client.get('/opinions/', params=params)
+        output_data = paginate_endpoint(
+            fetch_page=lambda request_params: client.get('/opinions/', params=request_params),
+            initial_params=params,
+            limit=limit,
+            max_pages=max_pages,
+            progress_logger=lambda page, page_count, accumulated, target: click.echo(
+                f"→ Page {page}: +{page_count} opinions "
+                f"(accumulated {accumulated}/{target if target is not None else 'all'})"
+            ),
+        )
 
         # Export results
         output_dir = Path(output_path)
         output_dir.mkdir(exist_ok=True)
 
-        if 'results' in result:
+        if 'results' in output_data:
             if output_format == 'json':
-                filepath = save_json(result, output_dir)
+                filepath = save_json(output_data, output_dir)
             elif output_format == 'csv':
-                filepath = save_csv(result['results'], output_dir)
+                filepath = save_csv(output_data['results'], output_dir)
             else:  # xlsx
-                filepath = save_xlsx(result['results'], output_dir)
+                filepath = save_xlsx(output_data['results'], output_dir)
 
-            click.echo(f"✓ Saved {len(result['results'])} opinions to {filepath}")
+            click.echo(f"✓ Found {output_data.get('count', 0)} total opinions")
+            click.echo(f"✓ Exported {output_data.get('returned_count', 0)} opinions")
+            click.echo(f"✓ Fetched {output_data.get('pages_fetched', 0)} page(s)")
+            click.echo(f"✓ Saved to {filepath}")
         else:
             click.echo("No results found")
+    except ValueError as e:
+        click.echo(f"Error: {e}")
+        raise SystemExit(1)
     except Exception as e:
         error = str(e)
         if "401" in error or "Unauthorized" in error:

@@ -5,6 +5,7 @@ import click
 import json
 from ..client import CourtListenerClient
 from ..output import save_json, save_csv, save_xlsx
+from ..pagination import paginate_endpoint
 from pathlib import Path
 from typing import List
 
@@ -65,7 +66,10 @@ def dockets():
 @click.argument('input_file', required=False, type=click.Path(exists=True, dir_okay=False))
 @click.option('--column', default=None,
               help='Column name in input CSV/XLSX containing docket numbers or IDs')
-@click.option('--limit', default=20, help='Results per page')
+@click.option('--limit', default=20, type=int,
+              help='Total results to export per request; use 0 with --max-pages 0 to export all results')
+@click.option('--max-pages', default=10, type=int,
+              help='Maximum pages to fetch (0 = no page cap)')
 @click.option('--offset', default=0, help='Pagination offset')
 @click.option('--court', help='Filter by court ID')
 @click.option('--case-name', help='Filter by case name')
@@ -73,7 +77,7 @@ def dockets():
               type=click.Choice(['json', 'csv', 'xlsx']))
 @click.option('--output', 'output_path', default='./output',
               type=click.Path())
-def list_dockets(input_file, column, limit, offset, court, case_name, output_format, output_path):
+def list_dockets(input_file, column, limit, max_pages, offset, court, case_name, output_format, output_path):
     """List case dockets or batch query from input CSV/XLSX."""
     client = CourtListenerClient()
 
@@ -88,34 +92,54 @@ def list_dockets(input_file, column, limit, offset, court, case_name, output_for
             query_values = _read_batch_values(Path(input_file), column)
             results = []
             errors = 0
+            pages_fetched = 0
 
-            with click.progressbar(query_values, label='Querying dockets') as bar:
-                for query_value in bar:
-                    try:
-                        if column.lower() in {'id', 'docket_id'}:
-                            docket = client.get(f"/dockets/{query_value}/")
+            for idx, query_value in enumerate(query_values, start=1):
+                click.echo(f"→ Query {idx}/{len(query_values)}: {query_value}")
+                try:
+                    if column.lower() in {'id', 'docket_id'}:
+                        docket = client.get(f"/dockets/{query_value}/")
+                        pages_fetched += 1
+                        if isinstance(docket, dict):
+                            docket['_query_value'] = query_value
+                            results.append(docket)
+                            click.echo(
+                                f"  → Item page 1: +1 dockets (accumulated 1/1)"
+                            )
+                    else:
+                        params = {
+                            'limit': 100 if limit == 0 else max(limit, 1),
+                            'offset': offset,
+                            'docket_number': query_value
+                        }
+                        if court:
+                            params['court'] = court
+                        if case_name:
+                            params['case_name'] = case_name
+                        docket_page_data = paginate_endpoint(
+                            fetch_page=lambda request_params: client.get('/dockets/', params=request_params),
+                            initial_params=params,
+                            limit=limit,
+                            max_pages=max_pages,
+                            progress_logger=lambda page, page_count, accumulated, target: click.echo(
+                                f"  → Item page {page}: +{page_count} dockets "
+                                f"(accumulated {accumulated}/{target if target is not None else 'all'})"
+                            ),
+                        )
+                        pages_fetched += docket_page_data.get('pages_fetched', 0)
+                        for docket in docket_page_data.get('results', []):
                             if isinstance(docket, dict):
                                 docket['_query_value'] = query_value
-                                results.append(docket)
-                        else:
-                            params = {'limit': limit, 'offset': offset, 'docket_number': query_value}
-                            if court:
-                                params['court'] = court
-                            if case_name:
-                                params['case_name'] = case_name
-                            result = client.get('/dockets/', params=params)
-                            for docket in result.get('results', []):
-                                if isinstance(docket, dict):
-                                    docket['_query_value'] = query_value
-                                results.append(docket)
-                    except Exception:
-                        errors += 1
+                            results.append(docket)
+                except Exception:
+                    errors += 1
 
             if output_format == 'json':
                 filepath = save_json(
                     {
                         'query_count': len(query_values),
                         'result_count': len(results),
+                        'pages_fetched': pages_fetched,
                         'error_count': errors,
                         'results': results
                     },
@@ -128,32 +152,45 @@ def list_dockets(input_file, column, limit, offset, court, case_name, output_for
 
             click.echo(f"✓ Processed {len(query_values)} query values from {input_file}")
             click.echo(f"✓ Retrieved {len(results)} dockets")
+            click.echo(f"✓ Fetched {pages_fetched} page(s)")
             if errors:
                 click.echo(f"✗ Errors: {errors}")
             click.echo(f"✓ Saved to {filepath}")
         else:
-            params = {'limit': limit, 'offset': offset}
+            params = {'limit': 100 if limit == 0 else max(limit, 1), 'offset': offset}
             if court:
                 params['court'] = court
             if case_name:
                 params['case_name'] = case_name
 
-            result = client.get('/dockets/', params=params)
+            output_data = paginate_endpoint(
+                fetch_page=lambda request_params: client.get('/dockets/', params=request_params),
+                initial_params=params,
+                limit=limit,
+                max_pages=max_pages,
+                progress_logger=lambda page, page_count, accumulated, target: click.echo(
+                    f"→ Page {page}: +{page_count} dockets "
+                    f"(accumulated {accumulated}/{target if target is not None else 'all'})"
+                ),
+            )
 
-            if 'results' in result:
+            if 'results' in output_data:
                 if output_format == 'json':
-                    filepath = save_json(result, output_dir)
+                    filepath = save_json(output_data, output_dir)
                 elif output_format == 'csv':
-                    filepath = save_csv(result['results'], output_dir)
+                    filepath = save_csv(output_data['results'], output_dir)
                 else:  # xlsx
-                    filepath = save_xlsx(result['results'], output_dir)
+                    filepath = save_xlsx(output_data['results'], output_dir)
 
-                click.echo(f"✓ Retrieved {len(result['results'])} dockets")
-                click.echo(f"✓ Total available: {result.get('count', 0)}")
+                click.echo(f"✓ Found {output_data.get('count', 0)} total dockets")
+                click.echo(f"✓ Exported {output_data.get('returned_count', 0)} dockets")
+                click.echo(f"✓ Fetched {output_data.get('pages_fetched', 0)} page(s)")
                 click.echo(f"✓ Saved to {filepath}")
             else:
                 click.echo("No dockets found")
-    
+    except ValueError as e:
+        click.echo(f"Error: {e}", err=True)
+        raise SystemExit(1)
     except Exception as e:
         click.echo(f"Error: {e}", err=True)
         raise SystemExit(1)
@@ -182,37 +219,53 @@ def get_docket(docket_id, output_format):
 
 @dockets.command('entries')
 @click.argument('docket_id', type=int)
-@click.option('--limit', default=20, help='Results per page')
+@click.option('--limit', default=20, type=int,
+              help='Total results to export; use 0 with --max-pages 0 to export all results')
+@click.option('--max-pages', default=10, type=int,
+              help='Maximum pages to fetch (0 = no page cap)')
 @click.option('--format', 'output_format', default='json',
               type=click.Choice(['json', 'csv', 'xlsx']))
 @click.option('--output', 'output_path', default='./output',
               type=click.Path())
-def get_docket_entries(docket_id, limit, output_format, output_path):
+def get_docket_entries(docket_id, limit, max_pages, output_format, output_path):
     """Get entries for a specific docket"""
     client = CourtListenerClient()
     
-    params = {'docket': docket_id, 'limit': limit}
+    params = {'docket': docket_id, 'limit': 100 if limit == 0 else max(limit, 1)}
     
     try:
-        result = client.get('/docket-entries/', params=params)
+        output_data = paginate_endpoint(
+            fetch_page=lambda request_params: client.get('/docket-entries/', params=request_params),
+            initial_params=params,
+            limit=limit,
+            max_pages=max_pages,
+            progress_logger=lambda page, page_count, accumulated, target: click.echo(
+                f"→ Page {page}: +{page_count} entries "
+                f"(accumulated {accumulated}/{target if target is not None else 'all'})"
+            ),
+        )
         
         # Export results
         output_dir = Path(output_path)
         output_dir.mkdir(exist_ok=True)
         
-        if 'results' in result:
+        if 'results' in output_data:
             if output_format == 'json':
-                filepath = save_json(result, output_dir)
+                filepath = save_json(output_data, output_dir)
             elif output_format == 'csv':
-                filepath = save_csv(result['results'], output_dir)
+                filepath = save_csv(output_data['results'], output_dir)
             else:  # xlsx
-                filepath = save_xlsx(result['results'], output_dir)
+                filepath = save_xlsx(output_data['results'], output_dir)
             
-            click.echo(f"✓ Retrieved {len(result['results'])} entries")
+            click.echo(f"✓ Found {output_data.get('count', 0)} total entries")
+            click.echo(f"✓ Exported {output_data.get('returned_count', 0)} entries")
+            click.echo(f"✓ Fetched {output_data.get('pages_fetched', 0)} page(s)")
             click.echo(f"✓ Saved to {filepath}")
         else:
             click.echo("No entries found")
-    
+    except ValueError as e:
+        click.echo(f"Error: {e}", err=True)
+        raise SystemExit(1)
     except Exception as e:
         click.echo(f"Error: {e}", err=True)
         raise SystemExit(1)
