@@ -306,3 +306,202 @@ def test_search_query_limit_zero_and_max_pages_zero_fetches_all(monkeypatch, tmp
     assert payload["returned_count"] == 12
     assert len(payload["results"]) == 12
     assert "Fetched 12 page(s)" in result.output
+
+
+def test_opinions_list_paginates_until_limit(monkeypatch, tmp_path):
+    """opinions list should aggregate multiple pages until requested total."""
+    page_1 = {
+        "count": 35,
+        "results": [{"id": i} for i in range(1, 21)],
+        "next": "https://www.courtlistener.com/api/rest/v4/opinions/?cursor=abc&limit=100&offset=0",
+    }
+    page_2 = {
+        "count": 35,
+        "results": [{"id": i} for i in range(21, 36)],
+        "next": None,
+    }
+
+    def mock_get(self, endpoint, **kwargs):
+        cursor = kwargs.get("params", {}).get("cursor")
+        return page_1 if cursor is None else page_2
+
+    monkeypatch.setattr("src.commands.opinions_commands.CourtListenerClient.get", mock_get)
+
+    output_dir = tmp_path / "out"
+    runner = CliRunner()
+    result = runner.invoke(
+        main,
+        ["opinions", "list", "--limit", "25", "--format", "json", "--output", str(output_dir)],
+    )
+
+    assert result.exit_code == 0
+    payload = json.loads((output_dir / "results.json").read_text())
+    assert payload["returned_count"] == 25
+    assert payload["pages_fetched"] == 2
+
+
+def test_courts_list_limit_zero_max_pages_zero_fetches_all(monkeypatch, tmp_path):
+    """courts list should fetch all pages when both caps are zero."""
+    pages = {
+        None: {
+            "count": 3,
+            "results": [{"id": 1}],
+            "next": "https://www.courtlistener.com/api/rest/v4/courts/?cursor=2",
+        },
+        "2": {
+            "count": 3,
+            "results": [{"id": 2}],
+            "next": "https://www.courtlistener.com/api/rest/v4/courts/?cursor=3",
+        },
+        "3": {
+            "count": 3,
+            "results": [{"id": 3}],
+            "next": None,
+        },
+    }
+
+    def mock_get(self, endpoint, **kwargs):
+        cursor = kwargs.get("params", {}).get("cursor")
+        return pages[cursor]
+
+    monkeypatch.setattr("src.commands.courts_commands.CourtListenerClient.get", mock_get)
+
+    output_dir = tmp_path / "out"
+    runner = CliRunner()
+    result = runner.invoke(
+        main,
+        [
+            "courts",
+            "list",
+            "--limit",
+            "0",
+            "--max-pages",
+            "0",
+            "--format",
+            "json",
+            "--output",
+            str(output_dir),
+        ],
+    )
+
+    assert result.exit_code == 0
+    payload = json.loads((output_dir / "results.json").read_text())
+    assert payload["returned_count"] == 3
+    assert payload["pages_fetched"] == 3
+
+
+def test_people_list_limit_zero_respects_max_pages(monkeypatch, tmp_path):
+    """people list with limit zero should still stop at max-pages."""
+
+    def mock_get(self, endpoint, **kwargs):
+        cursor = kwargs.get("params", {}).get("cursor")
+        if cursor is None:
+            return {
+                "count": 5,
+                "results": [{"id": 1}],
+                "next": "https://www.courtlistener.com/api/rest/v4/people/?cursor=2",
+            }
+        return {
+            "count": 5,
+            "results": [{"id": 2}],
+            "next": "https://www.courtlistener.com/api/rest/v4/people/?cursor=3",
+        }
+
+    monkeypatch.setattr("src.commands.people_commands.CourtListenerClient.get", mock_get)
+
+    output_dir = tmp_path / "out"
+    runner = CliRunner()
+    result = runner.invoke(
+        main,
+        [
+            "people",
+            "list",
+            "--limit",
+            "0",
+            "--max-pages",
+            "1",
+            "--format",
+            "json",
+            "--output",
+            str(output_dir),
+        ],
+    )
+
+    assert result.exit_code == 0
+    payload = json.loads((output_dir / "results.json").read_text())
+    assert payload["returned_count"] == 1
+    assert payload["pages_fetched"] == 1
+
+
+def test_audio_list_paginates_until_limit(monkeypatch, tmp_path):
+    """audio list should aggregate pages until requested limit."""
+    page_1 = {
+        "count": 30,
+        "results": [{"id": i} for i in range(1, 21)],
+        "next": "https://www.courtlistener.com/api/rest/v4/audio/?cursor=abc&limit=100&offset=0",
+    }
+    page_2 = {
+        "count": 30,
+        "results": [{"id": i} for i in range(21, 31)],
+        "next": None,
+    }
+
+    def mock_get(self, endpoint, **kwargs):
+        cursor = kwargs.get("params", {}).get("cursor")
+        return page_1 if cursor is None else page_2
+
+    monkeypatch.setattr("src.commands.audio_commands.CourtListenerClient.get", mock_get)
+
+    output_dir = tmp_path / "out"
+    runner = CliRunner()
+    result = runner.invoke(
+        main,
+        ["audio", "list", "--limit", "25", "--format", "json", "--output", str(output_dir)],
+    )
+
+    assert result.exit_code == 0
+    payload = json.loads((output_dir / "results.json").read_text())
+    assert payload["returned_count"] == 25
+    assert payload["pages_fetched"] == 2
+
+
+def test_docket_entries_paginates_until_limit(monkeypatch, tmp_path):
+    """dockets entries should aggregate pages and truncate to limit."""
+    page_1 = {
+        "count": 30,
+        "results": [{"id": i} for i in range(1, 21)],
+        "next": "https://www.courtlistener.com/api/rest/v4/docket-entries/?cursor=abc&limit=100",
+    }
+    page_2 = {
+        "count": 30,
+        "results": [{"id": i} for i in range(21, 31)],
+        "next": None,
+    }
+
+    def mock_get(self, endpoint, **kwargs):
+        cursor = kwargs.get("params", {}).get("cursor")
+        return page_1 if cursor is None else page_2
+
+    monkeypatch.setattr("src.commands.dockets_commands.CourtListenerClient.get", mock_get)
+
+    output_dir = tmp_path / "out"
+    runner = CliRunner()
+    result = runner.invoke(
+        main,
+        [
+            "dockets",
+            "entries",
+            "123",
+            "--limit",
+            "25",
+            "--format",
+            "json",
+            "--output",
+            str(output_dir),
+        ],
+    )
+
+    assert result.exit_code == 0
+    payload = json.loads((output_dir / "results.json").read_text())
+    assert payload["returned_count"] == 25
+    assert payload["pages_fetched"] == 2
