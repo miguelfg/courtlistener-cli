@@ -146,8 +146,8 @@ def test_search_query_paginates_until_requested_limit(monkeypatch, tmp_path):
     assert len(payload["results"]) == 25
 
 
-def test_search_query_without_limit_fetches_all_pages(monkeypatch, tmp_path):
-    """Omitting --limit should fetch all pages until next is null."""
+def test_search_query_without_limit_uses_default_limit(monkeypatch, tmp_path):
+    """Omitting --limit should use default limit=20."""
     page_1 = {
         "count": 45,
         "results": [{"id": i} for i in range(1, 21)],
@@ -196,8 +196,8 @@ def test_search_query_without_limit_fetches_all_pages(monkeypatch, tmp_path):
     assert result.exit_code == 0
     payload = json.loads((output_dir / "results.json").read_text())
     assert payload["count"] == 45
-    assert payload["returned_count"] == 45
-    assert len(payload["results"]) == 45
+    assert payload["returned_count"] == 20
+    assert len(payload["results"]) == 20
 
 
 def test_search_query_limit_zero_respects_default_max_pages(monkeypatch, tmp_path):
