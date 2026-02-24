@@ -81,6 +81,24 @@ INCLUDE_TIMESTAMP=true
 ### batch
 - `batch` - Process batch files (CSV/JSON Lines)
 
+### search
+- `search query --q "<terms>"` - Search across legal data
+- `--limit N` - Export exactly `N` aggregated results across pages
+- `--limit 0 --max-pages 0` - Fetch all available results (no page cap)
+
+## Search Pagination Examples
+
+```bash
+# Export up to 10 pages (default max-pages=10)
+courtlistener-cli search query --q '"serial number" "firearm"' --limit 0 --format json
+
+# Export all matching results (no limit, no page cap)
+courtlistener-cli search query --q '"serial number" "firearm"' --limit 0 --max-pages 0 --format json
+
+# Export exactly 25 aggregated results across multiple pages
+courtlistener-cli search query --q '"serial number" "firearm"' --limit 25 --format xlsx
+```
+
 ## Output Formats
 
 - **JSON**: Full structured data
