@@ -45,6 +45,9 @@ courtlistener-cli opinions list --format xlsx --output ./results/
 
 # Batch dockets list from CSV/XLSX (first sheet for XLSX)
 courtlistener-cli dockets list output/results.xlsx --column docketNumber
+
+# List courts with page cap protection
+courtlistener-cli courts list --limit 0 --max-pages 10 --format json
 ```
 
 ### 3. Batch Processing
@@ -86,6 +89,14 @@ INCLUDE_TIMESTAMP=true
 - `--limit N` - Export exactly `N` aggregated results across pages
 - `--limit 0 --max-pages 0` - Fetch all available results (no page cap)
 
+### Pagination Behavior (All list/search commands)
+- `--limit N`: export exactly `N` records aggregated across pages.
+- `--limit 0`: no record cap; still capped by pages.
+- `--max-pages 10` (default): safety cap for long queries.
+- `--limit 0 --max-pages 0`: unbounded crawl until API has no `next`.
+- Progress is printed per page:
+  - `→ Page 3: +20 results (accumulated 60/100)`
+
 ## Search Pagination Examples
 
 ```bash
@@ -97,6 +108,16 @@ courtlistener-cli search query --q '"serial number" "firearm"' --limit 0 --max-p
 
 # Export exactly 25 aggregated results across multiple pages
 courtlistener-cli search query --q '"serial number" "firearm"' --limit 25 --format xlsx
+```
+
+## Batch + Loop Example (Dockets)
+
+```bash
+# For each docket number in CSV, aggregate up to 50 records over up to 5 pages
+courtlistener-cli dockets list data/dockets.csv --column docketNumber --limit 50 --max-pages 5 --format json
+
+# Fully unbounded per docket value (use carefully on large inputs)
+courtlistener-cli dockets list data/dockets.csv --column docketNumber --limit 0 --max-pages 0 --format json
 ```
 
 ## Output Formats
