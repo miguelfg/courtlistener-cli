@@ -269,3 +269,24 @@ def get_docket_entries(docket_id, limit, max_pages, output_format, output_path):
     except Exception as e:
         click.echo(f"Error: {e}", err=True)
         raise SystemExit(1)
+
+
+@dockets.command('count')
+@click.option('--court', help='Filter by court ID')
+@click.option('--case-name', help='Filter by case name')
+def count_dockets(court, case_name):
+    """Return total matching dockets count"""
+    client = CourtListenerClient()
+
+    params = {'limit': 1}
+    if court:
+        params['court'] = court
+    if case_name:
+        params['case_name'] = case_name
+
+    try:
+        result = client.get('/dockets/', params=params)
+        click.echo(result.get('count', 0))
+    except Exception as e:
+        click.echo(f"Error: {e}", err=True)
+        raise SystemExit(1)

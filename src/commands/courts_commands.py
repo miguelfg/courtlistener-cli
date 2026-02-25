@@ -144,3 +144,24 @@ def search_courts(jurisdiction, court_type, limit, max_pages, offset, output_for
     except Exception as e:
         click.echo(f"Error: {e}", err=True)
         raise SystemExit(1)
+
+
+@courts.command('count')
+@click.option('--jurisdiction', help='Filter by jurisdiction')
+@click.option('--court-type', help='Filter by court type (federal/state)')
+def count_courts(jurisdiction, court_type):
+    """Return total matching courts count"""
+    client = CourtListenerClient()
+
+    params = {'limit': 1}
+    if jurisdiction:
+        params['jurisdiction'] = jurisdiction
+    if court_type:
+        params['court_type'] = court_type
+
+    try:
+        result = client.get('/courts/', params=params)
+        click.echo(result.get('count', 0))
+    except Exception as e:
+        click.echo(f"Error: {e}", err=True)
+        raise SystemExit(1)

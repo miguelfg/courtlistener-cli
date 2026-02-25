@@ -25,7 +25,8 @@ help:
 	@echo "Running:"
 	@echo "  make run              Run CLI help"
 	@echo "  make opinions-list    Example: List opinions"
-	@echo "  make opinions-search-firearm-serial  Search opinions for \"serial number\" and \"firearm\""
+	@echo "  make search-firearm-serial  Search opinions for \"serial number\" and \"firearm\""
+	@echo "  make count-firearm-serial   Count search hits for \"serial number\" and \"firearm\""
 	@echo "  make opinions-get     Example: Get single opinion"
 	@echo "  make batch-example    Example: Batch processing"
 
@@ -53,6 +54,9 @@ opinions-list:
 
 search-firearm-serial:
 	uv run $(PROJECT_NAME) search query --q '"serial number" "firearm"' --limit 100 --format xlsx
+
+count-firearm-serial:
+	uv run $(PROJECT_NAME) search count --q '"serial number" "firearm"' --type r
 
 opinions-get:
 	uv run $(PROJECT_NAME) opinions get 123456

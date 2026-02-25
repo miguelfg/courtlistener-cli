@@ -505,3 +505,64 @@ def test_docket_entries_paginates_until_limit(monkeypatch, tmp_path):
     payload = json.loads((output_dir / "results.json").read_text())
     assert payload["returned_count"] == 25
     assert payload["pages_fetched"] == 2
+
+
+@pytest.mark.parametrize(
+    "command,module_path,expected_endpoint,expected_params",
+    [
+        (
+            ["opinions", "count", "--search", "brown"],
+            "src.commands.opinions_commands.CourtListenerClient.get",
+            "/opinions/",
+            {"limit": 1, "search": "brown"},
+        ),
+        (
+            ["courts", "count", "--jurisdiction", "federal", "--court-type", "federal"],
+            "src.commands.courts_commands.CourtListenerClient.get",
+            "/courts/",
+            {"limit": 1, "jurisdiction": "federal", "court_type": "federal"},
+        ),
+        (
+            ["dockets", "count", "--court", "scotus", "--case-name", "Roe"],
+            "src.commands.dockets_commands.CourtListenerClient.get",
+            "/dockets/",
+            {"limit": 1, "court": "scotus", "case_name": "Roe"},
+        ),
+        (
+            ["people", "count", "--name", "Smith"],
+            "src.commands.people_commands.CourtListenerClient.get",
+            "/people/",
+            {"limit": 1, "name": "Smith"},
+        ),
+        (
+            ["audio", "count", "--court", "ca9", "--year", "2020"],
+            "src.commands.audio_commands.CourtListenerClient.get",
+            "/audio/",
+            {"limit": 1, "court": "ca9", "date_argued_gte": "2020-01-01", "date_argued_lte": "2020-12-31"},
+        ),
+        (
+            ["search", "count", "--q", "Miranda", "--type", "r"],
+            "src.commands.search_commands.CourtListenerClient.get",
+            "/search/",
+            {"limit": 1, "q": "Miranda", "type": "r"},
+        ),
+    ],
+)
+def test_count_commands_return_only_total(monkeypatch, command, module_path, expected_endpoint, expected_params):
+    """Count subcommands should print the API count and request minimal payloads."""
+    calls = []
+
+    def mock_get(self, endpoint, **kwargs):
+        calls.append((endpoint, kwargs.get("params", {})))
+        return {"count": 123, "results": [{"id": 1}]}
+
+    monkeypatch.setattr(module_path, mock_get)
+
+    runner = CliRunner()
+    result = runner.invoke(main, command)
+
+    assert result.exit_code == 0
+    assert result.output.strip() == "123"
+    assert len(calls) == 1
+    assert calls[0][0] == expected_endpoint
+    assert calls[0][1] == expected_params

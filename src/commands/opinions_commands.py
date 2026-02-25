@@ -79,6 +79,31 @@ def list_opinions(limit, max_pages, offset, search, output_format, output_path):
         raise SystemExit(1)
 
 
+@opinions.command('count')
+@click.option('--search', default=None, help='Full-text search')
+def count_opinions(search):
+    """Return total matching opinions count"""
+    client = CourtListenerClient()
+
+    params = {'limit': 1}
+    if search:
+        params['search'] = search
+
+    try:
+        result = client.get('/opinions/', params=params)
+        click.echo(result.get('count', 0))
+    except Exception as e:
+        error = str(e)
+        if "401" in error or "Unauthorized" in error:
+            click.echo(
+                "Authentication failed. Set COURTLISTENER_API_TOKEN with your API token.",
+                err=True,
+            )
+        else:
+            click.echo(f"Error: {error}", err=True)
+        raise SystemExit(1)
+
+
 @opinions.command('get')
 @click.argument('opinion_id', type=int)
 @click.option('--format', 'output_format', default='json',

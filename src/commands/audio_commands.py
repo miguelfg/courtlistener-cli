@@ -75,6 +75,28 @@ def list_audio(limit, max_pages, offset, court, year, output_format, output_path
         raise SystemExit(1)
 
 
+@audio.command('count')
+@click.option('--court', help='Filter by court')
+@click.option('--year', type=int, help='Filter by year')
+def count_audio(court, year):
+    """Return total matching recordings count"""
+    client = CourtListenerClient()
+
+    params = {'limit': 1}
+    if court:
+        params['court'] = court
+    if year:
+        params['date_argued_gte'] = f'{year}-01-01'
+        params['date_argued_lte'] = f'{year}-12-31'
+
+    try:
+        result = client.get('/audio/', params=params)
+        click.echo(result.get('count', 0))
+    except Exception as e:
+        click.echo(f"Error: {e}", err=True)
+        raise SystemExit(1)
+
+
 @audio.command('get')
 @click.argument('audio_id', type=int)
 def get_audio(audio_id):

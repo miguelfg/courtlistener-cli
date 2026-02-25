@@ -109,3 +109,26 @@ def advanced_search(court, judge, date_from, date_to, limit, output_format):
     except Exception as e:
         click.echo(f"Error: {e}", err=True)
         raise SystemExit(1)
+
+
+@search.command('count')
+@click.option('--q', required=True, help='Search query')
+@click.option('--type', 'search_type', default='r',
+              help='Type code (default: r).')
+def count_search(q, search_type):
+    """Return total matching search results count"""
+    client = CourtListenerClient()
+
+    try:
+        result = client.get(
+            '/search/',
+            params={
+                'q': q,
+                'type': search_type,
+                'limit': 1,
+            },
+        )
+        click.echo(result.get('count', 0))
+    except Exception as e:
+        click.echo(f"Error: {e}", err=True)
+        raise SystemExit(1)

@@ -71,6 +71,24 @@ def list_people(limit, max_pages, offset, name, output_format, output_path):
         raise SystemExit(1)
 
 
+@people.command('count')
+@click.option('--name', help='Filter by person name')
+def count_people(name):
+    """Return total matching people count"""
+    client = CourtListenerClient()
+
+    params = {'limit': 1}
+    if name:
+        params['name'] = name
+
+    try:
+        result = client.get('/people/', params=params)
+        click.echo(result.get('count', 0))
+    except Exception as e:
+        click.echo(f"Error: {e}", err=True)
+        raise SystemExit(1)
+
+
 @people.command('get')
 @click.argument('person_id', type=int)
 def get_person(person_id):
