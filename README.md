@@ -86,8 +86,14 @@ INCLUDE_TIMESTAMP=true
 
 ### search
 - `search query --q "<terms>"` - Search across legal data
+- `search count --q "<terms>"` - Return only the total hit count
+- `--type d|r|rd` - Choose result mode:
+  - `d`: dockets only
+  - `r`: dockets with up to 3 matching filing previews
+  - `rd`: filing documents only
 - `--limit N` - Export exactly `N` aggregated results across pages
 - `--limit 0 --max-pages 0` - Fetch all available results (no page cap)
+- Full guide: `docs/SEARCH_TYPES.md`
 
 ### Pagination Behavior (All list/search commands)
 - `--limit N`: export exactly `N` records aggregated across pages.
