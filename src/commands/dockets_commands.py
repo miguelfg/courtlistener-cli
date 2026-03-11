@@ -227,7 +227,9 @@ def get_docket(docket_id, output_format):
               type=click.Choice(['json', 'csv', 'xlsx']))
 @click.option('--output', 'output_path', default='./output',
               type=click.Path())
-def get_docket_entries(docket_id, limit, max_pages, output_format, output_path):
+@click.option('--filename', 'filename_stem', default='results',
+              help='Output filename stem (without extension)')
+def get_docket_entries(docket_id, limit, max_pages, output_format, output_path, filename_stem):
     """Get entries for a specific docket"""
     client = CourtListenerClient()
     
@@ -251,11 +253,11 @@ def get_docket_entries(docket_id, limit, max_pages, output_format, output_path):
         
         if 'results' in output_data:
             if output_format == 'json':
-                filepath = save_json(output_data, output_dir)
+                filepath = save_json(output_data, output_dir, filename_stem=filename_stem)
             elif output_format == 'csv':
-                filepath = save_csv(output_data['results'], output_dir)
+                filepath = save_csv(output_data['results'], output_dir, filename_stem=filename_stem)
             else:  # xlsx
-                filepath = save_xlsx(output_data['results'], output_dir)
+                filepath = save_xlsx(output_data['results'], output_dir, filename_stem=filename_stem)
             
             click.echo(f"✓ Found {output_data.get('count', 0)} total entries")
             click.echo(f"✓ Exported {output_data.get('returned_count', 0)} entries")

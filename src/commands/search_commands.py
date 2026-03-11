@@ -27,7 +27,9 @@ def search():
               type=click.Choice(['json', 'csv', 'xlsx']))
 @click.option('--output', 'output_path', default='./output',
               type=click.Path())
-def search_query(q, search_type, limit, max_pages, offset, output_format, output_path):
+@click.option('--slim', is_flag=True, default=False,
+              help='Also export a slim version with key fields only')
+def search_query(q, search_type, limit, max_pages, offset, output_format, output_path, slim):
     """Search for opinions, dockets, and other data"""
     client = CourtListenerClient()
 
@@ -65,6 +67,18 @@ def search_query(q, search_type, limit, max_pages, offset, output_format, output
             click.echo(f"✓ Exported {output_data.get('returned_count', 0)} results")
             click.echo(f"✓ Fetched {output_data.get('pages_fetched', 0)} page(s)")
             click.echo(f"✓ Saved to {filepath}")
+
+            if slim:
+                from ..reducers import slim_results
+                slim_data = slim_results(output_data['results'])
+                slim_payload = {"count": output_data.get("count"), "results": slim_data}
+                if output_format == 'json':
+                    slim_path = save_json(slim_payload, output_dir, filename_stem="results_slim")
+                elif output_format == 'csv':
+                    slim_path = save_csv(slim_data, output_dir, filename_stem="results_slim")
+                else:
+                    slim_path = save_xlsx(slim_data, output_dir, filename_stem="results_slim")
+                click.echo(f"✓ Slim export saved to {slim_path}")
         else:
             click.echo("No results found")
 

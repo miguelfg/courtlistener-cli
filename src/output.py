@@ -21,12 +21,12 @@ def flatten_dict(d: Dict[str, Any], parent_key: str = '', sep: str = '.') -> Dic
     return dict(items)
 
 
-def save_json(data: Any, output_path: Path, include_timestamp: bool = False) -> Path:
+def save_json(data: Any, output_path: Path, include_timestamp: bool = False, filename_stem: str = "results") -> Path:
     """Save data as JSON"""
     if include_timestamp:
-        filename = f"results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        filename = f"{filename_stem}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
     else:
-        filename = "results.json"
+        filename = f"{filename_stem}.json"
     
     filepath = output_path / filename
     with open(filepath, 'w') as f:
@@ -35,12 +35,12 @@ def save_json(data: Any, output_path: Path, include_timestamp: bool = False) -> 
     return filepath
 
 
-def save_csv(data: List[Dict], output_path: Path, include_timestamp: bool = False) -> Path:
+def save_csv(data: List[Dict], output_path: Path, include_timestamp: bool = False, filename_stem: str = "results") -> Path:
     """Save data as CSV"""
     if include_timestamp:
-        filename = f"results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+        filename = f"{filename_stem}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
     else:
-        filename = "results.csv"
+        filename = f"{filename_stem}.csv"
     
     filepath = output_path / filename
     
@@ -56,7 +56,7 @@ def save_csv(data: List[Dict], output_path: Path, include_timestamp: bool = Fals
     return filepath
 
 
-def save_xlsx(data: List[Dict], output_path: Path, include_timestamp: bool = False) -> Path:
+def save_xlsx(data: List[Dict], output_path: Path, include_timestamp: bool = False, filename_stem: str = "results") -> Path:
     """Save data as XLSX"""
     try:
         from openpyxl import Workbook
@@ -65,9 +65,9 @@ def save_xlsx(data: List[Dict], output_path: Path, include_timestamp: bool = Fal
         raise ImportError("openpyxl required for XLSX export. Install: pip install openpyxl")
     
     if include_timestamp:
-        filename = f"results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+        filename = f"{filename_stem}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
     else:
-        filename = "results.xlsx"
+        filename = f"{filename_stem}.xlsx"
     
     filepath = output_path / filename
     
