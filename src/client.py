@@ -9,7 +9,20 @@ from .config import config
 logger = logging.getLogger(__name__)
 
 _DEFAULT_RETRY_WAIT = 60   # seconds to wait on 429 when no Retry-After header
+_MAX_RETRY_WAIT = 300      # treat as daily quota if server asks to wait longer
 _MAX_RETRIES = 5
+
+
+class DailyQuotaExceeded(Exception):
+    """Raised when the API signals a daily rate limit with a long Retry-After."""
+    def __init__(self, wait: int):
+        self.wait = wait
+        hours, rem = divmod(wait, 3600)
+        minutes = rem // 60
+        super().__init__(
+            f'Daily rate limit exceeded. CourtListener asks to wait {wait}s '
+            f'({hours}h {minutes}m). Try again later.'
+        )
 
 
 class CourtListenerClient:
@@ -42,6 +55,8 @@ class CourtListenerClient:
 
             if response.status_code == 429:
                 wait = int(response.headers.get('Retry-After', _DEFAULT_RETRY_WAIT))
+                if wait > _MAX_RETRY_WAIT:
+                    raise DailyQuotaExceeded(wait)
                 logger.warning('Rate limited (429). Waiting %ds before retry %d/%d…', wait, attempt, _MAX_RETRIES)
                 print(f'  ⏳ Rate limited — waiting {wait}s before retry {attempt}/{_MAX_RETRIES}…')
                 time.sleep(wait)

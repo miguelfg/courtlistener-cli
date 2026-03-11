@@ -2,6 +2,7 @@
 
 from urllib.parse import parse_qs, urlparse
 from typing import Any, Callable, Dict, List, Optional
+from .client import DailyQuotaExceeded
 
 
 ProgressLogger = Callable[[int, int, int, Optional[int]], None]
@@ -37,7 +38,17 @@ def paginate_endpoint(
             break
 
         request_params = initial_params if next_url is None else _next_params(next_url)
-        result = fetch_page(request_params)
+        try:
+            result = fetch_page(request_params)
+        except DailyQuotaExceeded as exc:
+            print(f'  ✗ {exc}')
+            return {
+                "count": total_count,
+                "returned_count": len(all_results),
+                "pages_fetched": pages_fetched,
+                "results": all_results,
+                "partial": True,
+            }
         pages_fetched += 1
 
         total_count = result.get("count", total_count)
