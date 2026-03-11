@@ -29,7 +29,11 @@ def search():
               type=click.Path())
 @click.option('--slim', is_flag=True, default=False,
               help='Also export a slim version with key fields only')
-def search_query(q, search_type, limit, max_pages, offset, output_format, output_path, slim):
+@click.option('--filename', 'filename_stem', default='results',
+              help='Output filename stem (without extension)')
+@click.option('--list-sep', 'list_sep', default=';',
+              help='Separator for list fields in CSV/XLSX (empty string or "none" to keep as JSON)')
+def search_query(q, search_type, limit, max_pages, offset, output_format, output_path, slim, filename_stem, list_sep):
     """Search for opinions, dockets, and other data"""
     client = CourtListenerClient()
 
@@ -55,13 +59,15 @@ def search_query(q, search_type, limit, max_pages, offset, output_format, output
         output_dir = Path(output_path)
         output_dir.mkdir(exist_ok=True)
 
+        sep = None if (not list_sep or list_sep.lower() == 'none') else list_sep
+
         if 'results' in output_data:
             if output_format == 'json':
-                filepath = save_json(output_data, output_dir)
+                filepath = save_json(output_data, output_dir, filename_stem=filename_stem)
             elif output_format == 'csv':
-                filepath = save_csv(output_data['results'], output_dir)
+                filepath = save_csv(output_data['results'], output_dir, filename_stem=filename_stem, concat_list_fields_char=sep)
             else:  # xlsx
-                filepath = save_xlsx(output_data['results'], output_dir)
+                filepath = save_xlsx(output_data['results'], output_dir, filename_stem=filename_stem, concat_list_fields_char=sep)
 
             click.echo(f"✓ Found {output_data.get('count', 0)} total results")
             click.echo(f"✓ Exported {output_data.get('returned_count', 0)} results")
@@ -72,12 +78,13 @@ def search_query(q, search_type, limit, max_pages, offset, output_format, output
                 from ..reducers import slim_results
                 slim_data = slim_results(output_data['results'])
                 slim_payload = {"count": output_data.get("count"), "results": slim_data}
+                slim_stem = f"{filename_stem}_slim"
                 if output_format == 'json':
-                    slim_path = save_json(slim_payload, output_dir, filename_stem="results_slim")
+                    slim_path = save_json(slim_payload, output_dir, filename_stem=slim_stem)
                 elif output_format == 'csv':
-                    slim_path = save_csv(slim_data, output_dir, filename_stem="results_slim")
+                    slim_path = save_csv(slim_data, output_dir, filename_stem=slim_stem, concat_list_fields_char=sep)
                 else:
-                    slim_path = save_xlsx(slim_data, output_dir, filename_stem="results_slim")
+                    slim_path = save_xlsx(slim_data, output_dir, filename_stem=slim_stem, concat_list_fields_char=sep)
                 click.echo(f"✓ Slim export saved to {slim_path}")
         else:
             click.echo("No results found")

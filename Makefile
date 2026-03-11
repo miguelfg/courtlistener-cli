@@ -64,8 +64,7 @@ opinions-get:
 	uv run $(PROJECT_NAME) opinions get 123456
 
 docket-69717740:
-	uv run $(PROJECT_NAME) dockets get 69717740 > output/docket_69717740.json
-	uv run $(PROJECT_NAME) dockets entries 69717740 --limit 0 --max-pages 0 --format json --filename docket_69717740_entries
+	uv run $(PROJECT_NAME) search query --q "docket_id:69717740" --type r --limit 0 --max-pages 0 --format xlsx --filename docket_69717740 --slim
 
 search-slim-example:
 	uv run $(PROJECT_NAME) search query --q '"serial number" "firearm"' --limit 25 --format xlsx --slim

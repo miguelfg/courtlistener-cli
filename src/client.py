@@ -9,7 +9,7 @@ class CourtListenerClient:
     """HTTP client wrapper for CourtListener API"""
     
     def __init__(self, api_token: Optional[str] = None, base_url: Optional[str] = None):
-        self.api_token = api_token or config.api_token
+        self.api_token = api_token if api_token is not None else config.api_token
         self.base_url = base_url or config.base_url
         self.timeout = config.timeout
         self.client = None

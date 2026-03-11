@@ -3,19 +3,32 @@
 import json
 import csv
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 from datetime import datetime
 
 
-def flatten_dict(d: Dict[str, Any], parent_key: str = '', sep: str = '.') -> Dict[str, Any]:
-    """Flatten nested dictionary using dot notation"""
+def flatten_dict(
+    d: Dict[str, Any],
+    parent_key: str = '',
+    sep: str = '.',
+    concat_list_fields_char: Optional[str] = ';',
+) -> Dict[str, Any]:
+    """Flatten nested dictionary using dot notation.
+
+    Args:
+        concat_list_fields_char: Character used to join list values into a
+            string. When ``None`` or empty, lists are serialised as JSON.
+    """
     items = []
     for k, v in d.items():
         new_key = f"{parent_key}{sep}{k}" if parent_key else k
         if isinstance(v, dict):
-            items.extend(flatten_dict(v, new_key, sep=sep).items())
+            items.extend(flatten_dict(v, new_key, sep=sep, concat_list_fields_char=concat_list_fields_char).items())
         elif isinstance(v, list):
-            items.append((new_key, json.dumps(v)))
+            if concat_list_fields_char:
+                items.append((new_key, concat_list_fields_char.join(str(i) for i in v)))
+            else:
+                items.append((new_key, json.dumps(v)))
         else:
             items.append((new_key, v))
     return dict(items)
@@ -35,17 +48,23 @@ def save_json(data: Any, output_path: Path, include_timestamp: bool = False, fil
     return filepath
 
 
-def save_csv(data: List[Dict], output_path: Path, include_timestamp: bool = False, filename_stem: str = "results") -> Path:
+def save_csv(
+    data: List[Dict],
+    output_path: Path,
+    include_timestamp: bool = False,
+    filename_stem: str = "results",
+    concat_list_fields_char: Optional[str] = ';',
+) -> Path:
     """Save data as CSV"""
     if include_timestamp:
         filename = f"{filename_stem}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
     else:
         filename = f"{filename_stem}.csv"
-    
+
     filepath = output_path / filename
-    
+
     # Flatten nested dictionaries
-    flattened = [flatten_dict(row) for row in data]
+    flattened = [flatten_dict(row, concat_list_fields_char=concat_list_fields_char) for row in data]
     
     if flattened:
         with open(filepath, 'w', newline='') as f:
@@ -56,7 +75,13 @@ def save_csv(data: List[Dict], output_path: Path, include_timestamp: bool = Fals
     return filepath
 
 
-def save_xlsx(data: List[Dict], output_path: Path, include_timestamp: bool = False, filename_stem: str = "results") -> Path:
+def save_xlsx(
+    data: List[Dict],
+    output_path: Path,
+    include_timestamp: bool = False,
+    filename_stem: str = "results",
+    concat_list_fields_char: Optional[str] = ';',
+) -> Path:
     """Save data as XLSX"""
     try:
         from openpyxl import Workbook
@@ -72,8 +97,8 @@ def save_xlsx(data: List[Dict], output_path: Path, include_timestamp: bool = Fal
     filepath = output_path / filename
     
     # Flatten nested dictionaries
-    flattened = [flatten_dict(row) for row in data]
-    
+    flattened = [flatten_dict(row, concat_list_fields_char=concat_list_fields_char) for row in data]
+
     if not flattened:
         return filepath
     

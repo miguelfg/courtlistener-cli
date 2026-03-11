@@ -58,3 +58,19 @@ def slim_result(result: Dict[str, Any]) -> Dict[str, Any]:
 def slim_results(results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     """Apply ``slim_result`` to a list of raw API results."""
     return [slim_result(r) for r in results]
+
+
+def slim_entry(entry: Dict[str, Any]) -> Dict[str, Any]:
+    """Reduce a single docket entry to its key fields."""
+    recap_docs = entry.get("recap_documents") or []
+    return {
+        "entry_number": entry.get("entry_number"),
+        "date_filed": entry.get("date_filed", ""),
+        "description": (entry.get("description") or "")[:240],
+        "documents": _extract_documents(recap_docs),
+    }
+
+
+def slim_entries(entries: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Apply ``slim_entry`` to a list of docket entries."""
+    return [slim_entry(e) for e in entries]

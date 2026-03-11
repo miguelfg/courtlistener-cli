@@ -229,7 +229,9 @@ def get_docket(docket_id, output_format):
               type=click.Path())
 @click.option('--filename', 'filename_stem', default='results',
               help='Output filename stem (without extension)')
-def get_docket_entries(docket_id, limit, max_pages, output_format, output_path, filename_stem):
+@click.option('--slim', is_flag=True, default=False,
+              help='Also export a slim version with key fields only')
+def get_docket_entries(docket_id, limit, max_pages, output_format, output_path, filename_stem, slim):
     """Get entries for a specific docket"""
     client = CourtListenerClient()
     
@@ -263,6 +265,18 @@ def get_docket_entries(docket_id, limit, max_pages, output_format, output_path, 
             click.echo(f"✓ Exported {output_data.get('returned_count', 0)} entries")
             click.echo(f"✓ Fetched {output_data.get('pages_fetched', 0)} page(s)")
             click.echo(f"✓ Saved to {filepath}")
+
+            if slim:
+                from ..reducers import slim_entries
+                slim_data = slim_entries(output_data['results'])
+                slim_stem = f"{filename_stem}_slim"
+                if output_format == 'json':
+                    slim_path = save_json({"count": output_data.get("count"), "results": slim_data}, output_dir, filename_stem=slim_stem)
+                elif output_format == 'csv':
+                    slim_path = save_csv(slim_data, output_dir, filename_stem=slim_stem)
+                else:
+                    slim_path = save_xlsx(slim_data, output_dir, filename_stem=slim_stem)
+                click.echo(f"✓ Slim export saved to {slim_path}")
         else:
             click.echo("No entries found")
     except ValueError as e:
