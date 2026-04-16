@@ -28,8 +28,8 @@ def list_courts(limit, max_pages, offset, output_format, output_path):
     """List all courts"""
     client = CourtListenerClient()
     
-    params = {'limit': 100 if limit == 0 else max(limit, 1), 'offset': offset}
-    
+    params: dict = {}
+
     try:
         output_data = paginate_endpoint(
             fetch_page=lambda request_params: client.get('/courts/', params=request_params),
@@ -106,7 +106,7 @@ def search_courts(jurisdiction, court_type, limit, max_pages, offset, output_for
     """Search courts by jurisdiction or type"""
     client = CourtListenerClient()
     
-    params = {'limit': 100 if limit == 0 else max(limit, 1), 'offset': offset}
+    params: dict = {}
     if jurisdiction:
         params['jurisdiction'] = jurisdiction
     if court_type:
@@ -153,7 +153,7 @@ def count_courts(jurisdiction, court_type):
     """Return total matching courts count"""
     client = CourtListenerClient()
 
-    params = {'limit': 1}
+    params: dict = {}
     if jurisdiction:
         params['jurisdiction'] = jurisdiction
     if court_type:
