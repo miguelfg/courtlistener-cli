@@ -1,6 +1,6 @@
 # CourtListener Python CLI - Development Makefile
 
-.PHONY: install install-dev lint format test run help clean
+.PHONY: install install-dev lint format test run help clean search-slim-example docket-69717740
 
 PROJECT_NAME = courtlistener-cli
 
@@ -29,6 +29,8 @@ help:
 	@echo "  make count-firearm-serial   Count search hits for \"serial number\" and \"firearm\""
 	@echo "  make opinions-get     Example: Get single opinion"
 	@echo "  make batch-example    Example: Batch processing"
+	@echo "  make search-slim-example  Example: Search + slim export (key fields only)"
+	@echo "  make docket-69717740      Fetch docket 69717740 and its entries"
 
 install:
 	uv sync
@@ -60,6 +62,12 @@ count-firearm-serial:
 
 opinions-get:
 	uv run $(PROJECT_NAME) opinions get 123456
+
+docket-69717740:
+	uv run $(PROJECT_NAME) search query --q "docket_id:69717740" --type r --limit 0 --max-pages 0 --format xlsx --filename docket_69717740 --slim
+
+search-slim-example:
+	uv run $(PROJECT_NAME) search query --q '"serial number" "firearm"' --limit 25 --format xlsx --slim
 
 batch-example:
 	@echo "Creating sample batch file..."
