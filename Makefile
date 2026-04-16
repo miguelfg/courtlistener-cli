@@ -1,6 +1,6 @@
 # CourtListener Python CLI - Development Makefile
 
-.PHONY: install install-dev lint format test run help clean search-slim-example docket-69717740
+.PHONY: install install-dev lint format test run help clean search-slim-example docket-69717740 dockets-list
 
 PROJECT_NAME = courtlistener-cli
 
@@ -30,7 +30,8 @@ help:
 	@echo "  make opinions-get     Example: Get single opinion"
 	@echo "  make batch-example    Example: Batch processing"
 	@echo "  make search-slim-example  Example: Search + slim export (key fields only)"
-	@echo "  make docket-69717740      Fetch docket 69717740 and its entries"
+	@echo "  make docket-69717740      Fetch docket 69717740 and its entries
+  make dockets-list         Example: Batch dockets list from data/dockets.xlsx"
 
 install:
 	uv sync
@@ -68,6 +69,9 @@ docket-69717740:
 
 search-slim-example:
 	uv run $(PROJECT_NAME) search query --q '"serial number" "firearm"' --limit 25 --format xlsx --slim
+
+dockets-list:
+	uv run $(PROJECT_NAME) dockets list data/dockets.xlsx --column docketNumber --limit 50 --max-pages 5 --format json
 
 batch-example:
 	@echo "Creating sample batch file..."
