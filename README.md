@@ -35,19 +35,19 @@ export COURTLISTENER_API_TOKEN=your_token_here
 
 ```bash
 # List opinions
-courtlistener-cli opinions list --limit 10
+uv run courtlistener-cli opinions list --limit 10
 
 # Get a specific opinion
-courtlistener-cli opinions get 123456
+uv run courtlistener-cli opinions get 123456
 
 # Export to XLSX
-courtlistener-cli opinions list --format xlsx --output ./results/
+uv run courtlistener-cli opinions list --format xlsx --output ./results/
 
 # Batch dockets list from CSV/XLSX (first sheet for XLSX)
-courtlistener-cli dockets list output/results.xlsx --column docketNumber
+uv run courtlistener-cli dockets list output/results.xlsx --column docketNumber
 
 # List courts with page cap protection
-courtlistener-cli courts list --limit 0 --max-pages 10 --format json
+uv run courtlistener-cli courts list --limit 0 --max-pages 10 --format json
 ```
 
 ### 3. Batch Processing
@@ -57,7 +57,7 @@ courtlistener-cli courts list --limit 0 --max-pages 10 --format json
 echo 'method,endpoint,limit\nGET,/opinions/,20' > data/batch.csv
 
 # Process batch
-courtlistener-cli batch --input-file data/batch.csv --format xlsx
+uv run courtlistener-cli batch --input-file data/batch.csv --format xlsx
 ```
 
 ## Configuration
@@ -107,23 +107,23 @@ INCLUDE_TIMESTAMP=true
 
 ```bash
 # Export up to 10 pages (default max-pages=10)
-courtlistener-cli search query --q '"serial number" "firearm"' --limit 0 --format json
+uv run courtlistener-cli search query --q '"serial number" "firearm"' --limit 0 --format json
 
 # Export all matching results (no limit, no page cap)
-courtlistener-cli search query --q '"serial number" "firearm"' --limit 0 --max-pages 0 --format json
+uv run courtlistener-cli search query --q '"serial number" "firearm"' --limit 0 --max-pages 0 --format json
 
 # Export exactly 25 aggregated results across multiple pages
-courtlistener-cli search query --q '"serial number" "firearm"' --limit 25 --format xlsx
+uv run courtlistener-cli search query --q '"serial number" "firearm"' --limit 25 --format xlsx
 ```
 
 ## Batch + Loop Example (Dockets)
 
 ```bash
 # For each docket number in CSV, aggregate up to 50 records over up to 5 pages
-courtlistener-cli dockets list data/dockets.csv --column docketNumber --limit 50 --max-pages 5 --format json
+uv run courtlistener-cli dockets list data/dockets.csv --column docketNumber --limit 50 --max-pages 5 --format json
 
 # Fully unbounded per docket value (use carefully on large inputs)
-courtlistener-cli dockets list data/dockets.csv --column docketNumber --limit 0 --max-pages 0 --format json
+uv run courtlistener-cli dockets list data/dockets.csv --column docketNumber --limit 0 --max-pages 0 --format json
 ```
 
 ## Output Formats
