@@ -56,7 +56,7 @@ opinions-list:
 	uv run $(PROJECT_NAME) opinions list --limit 10 --format json
 
 search-firearm-serial:
-	uv run $(PROJECT_NAME) search query --q '"serial number" "firearm"' --limit 100 --format xlsx
+	uv run $(PROJECT_NAME) search query --q '"serial number" "firearm"' --limit 100 --format xlsx --filename "firearm-with-serials"
 
 count-firearm-serial:
 	uv run $(PROJECT_NAME) search count --q '"serial number" "firearm"' --type r
