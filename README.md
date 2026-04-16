@@ -44,7 +44,7 @@ uv run courtlistener-cli opinions get 123456
 uv run courtlistener-cli opinions list --format xlsx --output ./results/
 
 # Batch dockets list from CSV/XLSX (first sheet for XLSX)
-uv run courtlistener-cli dockets list output/results.xlsx --column docketNumber
+uv run courtlistener-cli dockets list data/dockets.xlsx --column docketNumber
 
 # List courts with page cap protection
 uv run courtlistener-cli courts list --limit 0 --max-pages 10 --format json
@@ -54,7 +54,7 @@ uv run courtlistener-cli courts list --limit 0 --max-pages 10 --format json
 
 ```bash
 # Create batch file
-echo 'method,endpoint,limit\nGET,/opinions/,20' > data/batch.csv
+printf 'method,endpoint,limit\nGET,/opinions/,20\n' > data/batch.csv
 
 # Process batch
 uv run courtlistener-cli batch --input-file data/batch.csv --format xlsx
