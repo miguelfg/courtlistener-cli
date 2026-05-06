@@ -27,7 +27,7 @@ help:
 	@echo "  make opinions-list    Example: List opinions"
 	@echo "  make search-firearm-serial  Search all opinions for \"serial number\" and \"firearm\""
 	@echo "  make search-firearm-serial-resume OFFSET=6820  Resume search from offset"
-	@echo "  make search-firearm-serial-continue OFFSET=6820  Resume to a new file (no overwrite)"
+	@echo "  make search-firearm-serial-continue OFFSET=6820  Resume to part file by offset (no overwrite)"
 	@echo "  make count-firearm-serial   Count search hits for \"serial number\" and \"firearm\""
 	@echo "  make opinions-get     Example: Get single opinion"
 	@echo "  make batch-example    Example: Batch processing"
@@ -64,7 +64,8 @@ search-firearm-serial-resume:
 	uv run $(PROJECT_NAME) search query --q '"serial number" "firearm"' --offset $(if $(OFFSET),$(OFFSET),0) --limit 0 --max-pages 0 --format xlsx --filename "firearm-with-serials"
 
 search-firearm-serial-continue:
-	uv run $(PROJECT_NAME) search query --q '"serial number" "firearm"' --offset $(if $(OFFSET),$(OFFSET),0) --limit 0 --max-pages 0 --format xlsx --filename "firearm-with-serials_continuation_$(if $(OFFSET),$(OFFSET),0)"
+	@if [ -z "$(OFFSET)" ]; then echo "Usage: make search-firearm-serial-continue OFFSET=<number>"; exit 1; fi
+	uv run $(PROJECT_NAME) search query --q '"serial number" "firearm"' --offset $(OFFSET) --limit 0 --max-pages 0 --format xlsx --filename "firearm-with-serials_part_$(OFFSET)"
 
 count-firearm-serial:
 	uv run $(PROJECT_NAME) search count --q '"serial number" "firearm"' --type r
