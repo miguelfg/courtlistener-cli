@@ -48,3 +48,6 @@ Thumbs.db
 
 # Jupyter
 .ipynb_checkpoints/
+
+# Raw crawled API docs
+docs/raw/

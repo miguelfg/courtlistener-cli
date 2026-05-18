@@ -1,13 +1,25 @@
 """Click commands for dockets resource"""
 
 import csv
+import re
 import click
 import json
+import httpx
+import logging
 from ..client import CourtListenerClient
 from ..output import save_json, save_csv, save_xlsx
 from ..pagination import paginate_endpoint
 from pathlib import Path
 from typing import List
+
+logger = logging.getLogger(__name__)
+
+_STORAGE_BASE = "https://storage.courtlistener.com/"
+
+
+def _safe_folder_name(name: str) -> str:
+    """Strip characters that are illegal in directory names on common OSes."""
+    return re.sub(r'[<>:"/\\|?*\x00-\x1f]', '_', name).strip()
 
 
 def _read_batch_values(input_file: Path, column: str) -> List[str]:
@@ -303,6 +315,209 @@ def count_dockets(court, case_name):
     try:
         result = client.get('/dockets/', params=params)
         click.echo(result.get('count', 0))
+    except Exception as e:
+        click.echo(f"Error: {e}", err=True)
+        raise SystemExit(1)
+
+
+@dockets.command('download-docs')
+@click.argument('docket_id', type=int)
+@click.option('--output', 'output_path', default='./output', type=click.Path(),
+              help='Parent directory; a case-named subfolder is created automatically')
+@click.option('--manifest', 'manifest_format', default='xlsx',
+              type=click.Choice(['xlsx', 'csv']),
+              help='Format for the tarentula mapping spreadsheet')
+def download_docs(docket_id, output_path, manifest_format):
+    """Download all free PDFs for a docket and generate a tarentula manifest.
+
+    Creates a folder named "{case_name} ; {docket_number}" under OUTPUT and
+    writes a manifest spreadsheet mapping each PDF filename to its entry
+    number, filing description, and case folder — ready for tarentula ingestion.
+    """
+    client = CourtListenerClient()
+
+    try:
+        # --- 1. Fetch docket metadata for folder naming ---
+        click.echo(f"→ Fetching docket {docket_id} metadata…")
+        docket = client.get(f'/dockets/{docket_id}/')
+        case_name = docket.get('case_name') or docket.get('case_name_short') or f'docket_{docket_id}'
+        docket_number = docket.get('docket_number') or str(docket_id)
+        raw_folder = f"{case_name} ; {docket_number}"
+        folder_name = _safe_folder_name(raw_folder)
+
+        case_dir = Path(output_path) / folder_name
+        case_dir.mkdir(parents=True, exist_ok=True)
+        click.echo(f"→ Case folder: {case_dir}")
+
+        # --- 2. Fetch all docket entries ---
+        click.echo("→ Fetching docket entries…")
+        entries_data = paginate_endpoint(
+            fetch_page=lambda params: client.get('/docket-entries/', params=params),
+            initial_params={'docket': docket_id, 'page_size': 100},
+            limit=0,
+            max_pages=0,
+            progress_logger=lambda page, count, acc, target: click.echo(
+                f"  → Page {page}: +{count} entries (total {acc})"
+            ),
+        )
+        entries = entries_data.get('results', [])
+        click.echo(f"→ {len(entries)} entries fetched")
+
+        # --- 3. Download available PDFs and build manifest ---
+        manifest_rows: List[dict] = []
+        downloaded = 0
+        skipped = 0
+
+        download_headers = {'User-Agent': 'courtlistener-cli/1.0.0'}
+
+        for entry in entries:
+            entry_number = entry.get('entry_number', '')
+            description = (entry.get('description') or '').strip()
+            recap_docs = entry.get('recap_documents') or []
+
+            for doc in recap_docs:
+                if not doc.get('is_available'):
+                    skipped += 1
+                    continue
+
+                filepath_local = doc.get('filepath_local') or ''
+                if not filepath_local:
+                    skipped += 1
+                    continue
+
+                pdf_filename = Path(filepath_local).name
+                download_url = _STORAGE_BASE + filepath_local
+                dest = case_dir / pdf_filename
+
+                if dest.exists():
+                    click.echo(f"  ✓ Already exists: {pdf_filename}")
+                else:
+                    try:
+                        with httpx.stream('GET', download_url, headers=download_headers, timeout=60, follow_redirects=True) as r:
+                            r.raise_for_status()
+                            with open(dest, 'wb') as f:
+                                for chunk in r.iter_bytes(chunk_size=65536):
+                                    f.write(chunk)
+                        click.echo(f"  ↓ {pdf_filename}  (entry {entry_number})")
+                        downloaded += 1
+                    except Exception as exc:
+                        logger.warning("Failed to download %s: %s", pdf_filename, exc)
+                        click.echo(f"  ✗ Failed: {pdf_filename} — {exc}", err=True)
+                        skipped += 1
+                        continue
+
+                manifest_rows.append({
+                    'pdf_filename': pdf_filename,
+                    'case_folder': folder_name,
+                    'entry_number': entry_number,
+                    'filing_name': description,
+                    'download_url': download_url,
+                })
+
+        # --- 4. Write manifest ---
+        if manifest_rows:
+            manifest_stem = f'manifest_{docket_id}'
+            if manifest_format == 'xlsx':
+                manifest_path = save_xlsx(manifest_rows, case_dir, filename_stem=manifest_stem)
+            else:
+                manifest_path = save_csv(manifest_rows, case_dir, filename_stem=manifest_stem)
+            click.echo(f"✓ Manifest saved to {manifest_path}")
+        else:
+            click.echo("No downloadable documents found — manifest not written")
+
+        click.echo(f"✓ Downloaded: {downloaded}  |  Skipped/unavailable: {skipped}")
+
+    except Exception as e:
+        click.echo(f"Error: {e}", err=True)
+        raise SystemExit(1)
+
+
+@dockets.command('parties')
+@click.argument('docket_id', type=int)
+@click.option('--format', 'output_format', default='xlsx',
+              type=click.Choice(['json', 'csv', 'xlsx']))
+@click.option('--output', 'output_path', default='./output', type=click.Path())
+@click.option('--filename', 'filename_stem', default=None,
+              help='Output filename stem (without extension); defaults to parties_{docket_id}')
+def get_parties(docket_id, output_format, output_path, filename_stem):
+    """Get parties and criminal charges for a docket.
+
+    Fetches all parties (defendants, attorneys, etc.) for DOCKET_ID and
+    includes their criminal counts (charge description, disposition) when
+    present — i.e. the charges/citations table from the Parties & Attorneys tab.
+    """
+    client = CourtListenerClient()
+
+    try:
+        click.echo(f"→ Fetching parties for docket {docket_id}…")
+        parties_data = paginate_endpoint(
+            fetch_page=lambda params: client.get('/parties/', params=params),
+            initial_params={'docket': docket_id, 'limit': 100},
+            limit=0,
+            max_pages=0,
+            progress_logger=lambda page, count, acc, target: click.echo(
+                f"  → Page {page}: +{count} parties (total {acc})"
+            ),
+        )
+        parties = parties_data.get('results', [])
+
+        if not parties:
+            click.echo("No parties found for this docket")
+            return
+
+        # Flatten criminal_counts into one row per count so charges are readable.
+        # Real API structure: party.party_types[].criminal_counts[] and .criminal_complaints[]
+        # Charge field is `name` (e.g. "18:371 (Conspiracy)(1ss)"), not `description`.
+        rows: List[dict] = []
+        for party in parties:
+            party_types = party.get('party_types') or []
+            attorneys = party.get('attorneys') or []
+
+            # Collect attorney IDs (API returns URL references, not name strings)
+            attorney_ids = list({a.get('attorney_id') for a in attorneys if a.get('attorney_id')})
+
+            for pt in party_types:
+                criminal_counts = pt.get('criminal_counts') or []
+                criminal_complaints = pt.get('criminal_complaints') or []
+
+                base = {
+                    'party_name': party.get('name', ''),
+                    'party_type': pt.get('name', ''),
+                    'date_terminated': pt.get('date_terminated') or '',
+                    'highest_offense_opening': pt.get('highest_offense_level_opening', ''),
+                    'highest_offense_terminated': pt.get('highest_offense_level_terminated', ''),
+                    'attorney_ids': '; '.join(str(i) for i in attorney_ids),
+                    'criminal_complaints': '; '.join(
+                        c.get('plain_text', '') for c in criminal_complaints if c.get('plain_text')
+                    ),
+                }
+
+                if criminal_counts:
+                    for count in criminal_counts:
+                        rows.append({
+                            **base,
+                            'charge': count.get('name', ''),
+                            'disposition': count.get('disposition', ''),
+                            'status': count.get('status', ''),
+                        })
+                else:
+                    rows.append({**base, 'charge': '', 'disposition': '', 'status': ''})
+
+        output_dir = Path(output_path)
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        stem = filename_stem or f'parties_{docket_id}'
+
+        if output_format == 'json':
+            filepath = save_json({'count': len(rows), 'results': rows}, output_dir, filename_stem=stem)
+        elif output_format == 'csv':
+            filepath = save_csv(rows, output_dir, filename_stem=stem)
+        else:
+            filepath = save_xlsx(rows, output_dir, filename_stem=stem)
+
+        click.echo(f"✓ {len(parties)} parties, {len(rows)} charge rows")
+        click.echo(f"✓ Saved to {filepath}")
+
     except Exception as e:
         click.echo(f"Error: {e}", err=True)
         raise SystemExit(1)

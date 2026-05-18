@@ -1,6 +1,6 @@
 # CourtListener Python CLI - Development Makefile
 
-.PHONY: install install-dev lint format test run help clean search-slim-example docket-69717740 dockets-list
+.PHONY: install install-dev lint format test run help clean search-slim-example docket-69717740 dockets-list docket-4134326-download-docs docket-4134326-parties
 
 PROJECT_NAME = courtlistener-cli
 
@@ -33,7 +33,7 @@ help:
 	@echo "  make batch-example    Example: Batch processing"
 	@echo "  make search-slim-example  Example: Search + slim export (key fields only)"
 	@echo "  make docket-69717740      Fetch docket 69717740 and its entries"
-	@echo "  make dockets-list         Example: Batch dockets list from data/dockets.xlsx"
+	@echo "  make dockets-list                      Example: Batch dockets list from data/dockets.xlsx\n  make docket-4134326-download-docs      Download all free PDFs for docket 4134326 + manifest\n  make docket-4134326-parties            Get parties and criminal charges for docket 4134326"
 
 install:
 	uv sync
@@ -81,6 +81,12 @@ search-slim-example:
 
 dockets-list:
 	uv run $(PROJECT_NAME) dockets list data/dockets.xlsx --column docketNumber --limit 50 --max-pages 5 --format json
+
+docket-4134326-download-docs:
+	uv run $(PROJECT_NAME) dockets download-docs 4134326 --output ./output
+
+docket-4134326-parties:
+	uv run $(PROJECT_NAME) dockets parties 4134326 --output ./output
 
 batch-example:
 	@echo "Creating sample batch file..."
