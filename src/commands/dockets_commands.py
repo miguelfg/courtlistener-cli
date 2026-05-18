@@ -327,7 +327,9 @@ def count_dockets(court, case_name):
 @click.option('--manifest', 'manifest_format', default='xlsx',
               type=click.Choice(['xlsx', 'csv']),
               help='Format for the tarentula mapping spreadsheet')
-def download_docs(docket_id, output_path, manifest_format):
+@click.option('--available-only', is_flag=True, default=False,
+              help='Fetch only documents available for free download (skips unavailable from API query)')
+def download_docs(docket_id, output_path, manifest_format, available_only):
     """Download all free PDFs for a docket and generate a tarentula manifest.
 
     Creates a folder named "{case_name} ; {docket_number}" under OUTPUT and
@@ -375,14 +377,17 @@ def download_docs(docket_id, output_path, manifest_format):
         # Querying /recap-documents/ with docket_entry__docket avoids the
         # truncated embedded list that /docket-entries/ returns per entry.
         click.echo("→ Fetching all recap documents…")
+        recap_params: dict = {
+            'docket_entry__docket': docket_id,
+            'page_size': 100,
+            'fields!': 'plain_text',
+        }
+        if available_only:
+            recap_params['is_available'] = True
+
         docs_data = paginate_endpoint(
             fetch_page=lambda params: client.get('/recap-documents/', params=params),
-            initial_params={
-                'docket_entry__docket': docket_id,
-                'is_available': True,
-                'page_size': 100,
-                'fields!': 'plain_text',
-            },
+            initial_params=recap_params,
             limit=0,
             max_pages=0,
             progress_logger=lambda page, count, acc, target: click.echo(
@@ -390,7 +395,8 @@ def download_docs(docket_id, output_path, manifest_format):
             ),
         )
         all_docs = docs_data.get('results', [])
-        click.echo(f"→ {len(all_docs)} available recap documents found")
+        available_count = sum(1 for d in all_docs if d.get('is_available'))
+        click.echo(f"→ {len(all_docs)} recap documents found ({available_count} available for download)")
 
         # --- 4. Download available PDFs and build manifest ---
         manifest_rows: List[dict] = []
@@ -400,10 +406,7 @@ def download_docs(docket_id, output_path, manifest_format):
         download_headers = {'User-Agent': 'courtlistener-cli/1.0.0'}
 
         for doc in all_docs:
-            filepath_local = doc.get('filepath_local') or ''
-            if not filepath_local:
-                skipped += 1
-                continue
+            is_available = bool(doc.get('is_available'))
 
             # Resolve entry metadata from the docket_entry reference
             de_ref = doc.get('docket_entry') or ''
@@ -419,33 +422,45 @@ def download_docs(docket_id, output_path, manifest_format):
             entry_number = meta.get('entry_number', '')
             description = meta.get('description', '')
 
-            pdf_filename = Path(filepath_local).name
-            download_url = _STORAGE_BASE + filepath_local
-            dest = case_dir / pdf_filename
+            filepath_local = doc.get('filepath_local') or ''
+            pdf_filename = Path(filepath_local).name if filepath_local else ''
+            download_url = (_STORAGE_BASE + filepath_local) if filepath_local else ''
+            download_status = 'not_available'
 
-            if dest.exists():
-                click.echo(f"  ✓ Already exists: {pdf_filename}")
+            if is_available and filepath_local:
+                dest = case_dir / pdf_filename
+                if dest.exists():
+                    click.echo(f"  ✓ Already exists: {pdf_filename}")
+                    download_status = 'already_exists'
+                else:
+                    try:
+                        with httpx.stream('GET', download_url, headers=download_headers, timeout=60, follow_redirects=True) as r:
+                            r.raise_for_status()
+                            with open(dest, 'wb') as f:
+                                for chunk in r.iter_bytes(chunk_size=65536):
+                                    f.write(chunk)
+                        click.echo(f"  ↓ {pdf_filename}  (entry {entry_number})")
+                        downloaded += 1
+                        download_status = 'downloaded'
+                    except Exception as exc:
+                        logger.warning("Failed to download %s: %s", pdf_filename, exc)
+                        click.echo(f"  ✗ Failed: {pdf_filename} — {exc}", err=True)
+                        skipped += 1
+                        download_status = 'failed'
             else:
-                try:
-                    with httpx.stream('GET', download_url, headers=download_headers, timeout=60, follow_redirects=True) as r:
-                        r.raise_for_status()
-                        with open(dest, 'wb') as f:
-                            for chunk in r.iter_bytes(chunk_size=65536):
-                                f.write(chunk)
-                    click.echo(f"  ↓ {pdf_filename}  (entry {entry_number})")
-                    downloaded += 1
-                except Exception as exc:
-                    logger.warning("Failed to download %s: %s", pdf_filename, exc)
-                    click.echo(f"  ✗ Failed: {pdf_filename} — {exc}", err=True)
-                    skipped += 1
-                    continue
+                skipped += 1
 
             manifest_rows.append({
                 'pdf_filename': pdf_filename,
                 'case_folder': folder_name,
                 'entry_number': entry_number,
                 'filing_name': description,
+                'is_available': is_available,
+                'download_status': download_status,
                 'download_url': download_url,
+                'document_number': doc.get('document_number', ''),
+                'attachment_number': doc.get('attachment_number', ''),
+                'recap_doc_id': doc.get('id', ''),
             })
 
         # --- 5. Write manifest ---
