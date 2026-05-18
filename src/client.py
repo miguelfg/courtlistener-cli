@@ -41,7 +41,7 @@ class CourtListenerClient:
             'User-Agent': 'courtlistener-cli/1.0.0'
         }
         if self.api_token:
-            headers['Authorization'] = f'Bearer {self.api_token}'
+            headers['Authorization'] = f'Token {self.api_token}'
         return headers
 
     def request(self, method: str, endpoint: str, **kwargs) -> Dict[str, Any]:
