@@ -1,8 +1,11 @@
 """Pagination utilities for CourtListener list-style endpoints."""
 
+import time
 from urllib.parse import parse_qs, urlparse
 from typing import Any, Callable, Dict, List, Optional
 from .client import DailyQuotaExceeded
+
+_INTER_PAGE_DELAY = 0.5  # seconds between paginated requests (avoids burst throttling)
 
 
 ProgressLogger = Callable[[int, int, int, Optional[int]], None]
@@ -51,7 +54,9 @@ def paginate_endpoint(
             }
         pages_fetched += 1
 
-        total_count = result.get("count", total_count)
+        raw_count = result.get("count")
+        if isinstance(raw_count, int):
+            total_count = raw_count
         page_results = result.get("results", []) or []
         if not isinstance(page_results, list):
             page_results = []
@@ -67,6 +72,8 @@ def paginate_endpoint(
         next_url = result.get("next")
         if not next_url or not page_results:
             break
+
+        time.sleep(_INTER_PAGE_DELAY)
 
     return {
         "count": total_count,

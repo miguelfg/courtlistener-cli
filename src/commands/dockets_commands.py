@@ -235,7 +235,7 @@ def get_docket_entries(docket_id, limit, max_pages, output_format, output_path, 
     """Get entries for a specific docket"""
     client = CourtListenerClient()
     
-    params = {'docket': docket_id, 'limit': 100 if limit == 0 else max(limit, 1)}
+    params = {'docket': docket_id, 'page_size': 100 if limit == 0 else max(limit, 1)}
     
     try:
         output_data = paginate_endpoint(
