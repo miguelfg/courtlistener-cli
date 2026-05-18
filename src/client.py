@@ -9,7 +9,7 @@ from .config import config
 logger = logging.getLogger(__name__)
 
 _DEFAULT_RETRY_WAIT = 60   # seconds to wait on 429 when no Retry-After header
-_MAX_RETRY_WAIT = 300      # treat as daily quota if server asks to wait longer
+_MAX_RETRY_WAIT = 3600     # treat as daily quota only if server asks to wait > 1 hour
 _MAX_RETRIES = 5
 
 

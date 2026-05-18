@@ -5,7 +5,7 @@ from urllib.parse import parse_qs, urlparse
 from typing import Any, Callable, Dict, List, Optional
 from .client import DailyQuotaExceeded
 
-_INTER_PAGE_DELAY = 2.0  # seconds between paginated requests (avoids burst throttling)
+_INTER_PAGE_DELAY = 13.0  # seconds between paginated requests — respects 5 req/min authenticated limit
 
 
 ProgressLogger = Callable[[int, int, int, Optional[int]], None]
