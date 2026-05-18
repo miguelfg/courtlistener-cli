@@ -1,0 +1,94 @@
+openapi: "3.0.0"
+info:
+  title: API Title
+  version: "1.0.0"
+  description: API description
+  contact:
+    name: Contact Name
+    url: https://example.com
+  license:
+    name: MIT
+
+servers:
+  - url: https://api.example.com
+    description: Production server
+
+paths:
+  /resource:
+    get:
+      summary: Get resources
+      tags:
+        - Resource
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+        '500':
+          description: Server error
+    post:
+      summary: Create resource
+      tags:
+        - Resource
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: Created
+  /resource/{id}:
+    get:
+      summary: Get specific resource
+      tags:
+        - Resource
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response
+        '404':
+          description: Not found
+    put:
+      summary: Update resource
+      tags:
+        - Resource
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Updated
+    delete:
+      summary: Delete resource
+      tags:
+        - Resource
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Deleted

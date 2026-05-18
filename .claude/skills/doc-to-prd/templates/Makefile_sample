@@ -1,0 +1,197 @@
+# Makefile for [CLI_NAME] - Python API Client
+# This is a sample Makefile for Click CLI projects using uv (Python package manager)
+# Customize PROJECT_NAME and commands as needed
+
+.PHONY: help install install-dev lint format test test-cov test-fast dev build clean docs prd release info status
+
+# Configuration
+PROJECT_NAME := [cli_name]
+SRC_DIR := src
+TESTS_DIR := tests
+
+# Color output
+GREEN := \033[0;32m
+YELLOW := \033[0;33m
+NC := \033[0m # No Color
+
+help:
+	@echo "$(GREEN)$(PROJECT_NAME) - Makefile targets (using uv):$(NC)"
+	@echo ""
+	@echo "Installation:"
+	@echo "  $(YELLOW)make install$(NC)        - Install dependencies (uv sync)"
+	@echo "  $(YELLOW)make install-dev$(NC)    - Install with development dependencies"
+	@echo ""
+	@echo "Code Quality:"
+	@echo "  $(YELLOW)make lint$(NC)           - Run linting (black check, pylint)"
+	@echo "  $(YELLOW)make format$(NC)         - Format code (black, isort)"
+	@echo "  $(YELLOW)make format-check$(NC)   - Check format without changing files"
+	@echo ""
+	@echo "Testing:"
+	@echo "  $(YELLOW)make test$(NC)           - Run all tests with coverage"
+	@echo "  $(YELLOW)make test-fast$(NC)      - Run tests without coverage"
+	@echo "  $(YELLOW)make test-verbose$(NC)   - Run tests with verbose output"
+	@echo ""
+	@echo "Development:"
+	@echo "  $(YELLOW)make dev$(NC)            - Show CLI help (verify installation)"
+	@echo ""
+	@echo "Endpoint Examples (auto-generated):"
+	@echo "  $(YELLOW)make [resource]-list$(NC)     - uv run $(PROJECT_NAME) [resource] list"
+	@echo "  $(YELLOW)make [resource]-get$(NC)      - uv run $(PROJECT_NAME) [resource] get --id 123"
+	@echo "  $(YELLOW)make [resource]-create$(NC)   - uv run $(PROJECT_NAME) [resource] create"
+	@echo ""
+	@echo "Build & Release:"
+	@echo "  $(YELLOW)make build$(NC)          - Build distribution packages"
+	@echo "  $(YELLOW)make release$(NC)        - Build and prepare release"
+	@echo "  $(YELLOW)make clean$(NC)          - Clean build artifacts"
+	@echo ""
+	@echo "Utility:"
+	@echo "  $(YELLOW)make info$(NC)           - Show project information"
+	@echo "  $(YELLOW)make status$(NC)         - Show git and uv status"
+	@echo "  $(YELLOW)make help$(NC)           - Show this help message"
+
+# Installation targets
+
+install:
+	@echo "$(GREEN)Installing $(PROJECT_NAME) dependencies with uv...$(NC)"
+	uv sync
+	@echo "$(GREEN)✓ Installation complete$(NC)"
+
+install-dev:
+	@echo "$(GREEN)Installing $(PROJECT_NAME) with dev dependencies...$(NC)"
+	uv sync --all-extras
+	@echo "$(GREEN)✓ Installation complete$(NC)"
+
+# Code quality targets
+
+lint:
+	@echo "$(GREEN)Running linters...$(NC)"
+	uv run black --check $(SRC_DIR)/ $(TESTS_DIR)/
+	uv run pylint $(SRC_DIR)/ --disable=C0111,C0103 || true
+	@echo "$(GREEN)✓ Linting complete$(NC)"
+
+format:
+	@echo "$(GREEN)Formatting code...$(NC)"
+	uv run black $(SRC_DIR)/ $(TESTS_DIR)/
+	uv run isort $(SRC_DIR)/ $(TESTS_DIR)/
+	@echo "$(GREEN)✓ Formatting complete$(NC)"
+
+format-check:
+	@echo "$(GREEN)Checking code format...$(NC)"
+	uv run black --check $(SRC_DIR)/ $(TESTS_DIR)/
+	uv run isort --check-only $(SRC_DIR)/ $(TESTS_DIR)/
+	@echo "$(GREEN)✓ Format check complete$(NC)"
+
+# Testing targets
+
+test:
+	@echo "$(GREEN)Running tests with coverage...$(NC)"
+	uv run pytest $(TESTS_DIR)/ -v --cov=$(SRC_DIR)/ --cov-report=term-missing --cov-report=html
+	@echo "$(GREEN)✓ Tests complete. Coverage report: htmlcov/index.html$(NC)"
+
+test-fast:
+	@echo "$(GREEN)Running tests (fast mode)...$(NC)"
+	uv run pytest $(TESTS_DIR)/ -v --tb=short
+	@echo "$(GREEN)✓ Tests complete$(NC)"
+
+test-verbose:
+	@echo "$(GREEN)Running tests (verbose)...$(NC)"
+	uv run pytest $(TESTS_DIR)/ -vv --tb=long -s
+	@echo "$(GREEN)✓ Tests complete$(NC)"
+
+test-watch:
+	@echo "$(GREEN)Running tests in watch mode...$(NC)"
+	uv run pytest-watch $(TESTS_DIR)/ -- -v
+
+# Development targets
+
+dev:
+	@echo "$(GREEN)Verifying $(PROJECT_NAME) installation...$(NC)"
+	uv run $(PROJECT_NAME) --version
+	uv run $(PROJECT_NAME) --help
+	@echo "$(GREEN)✓ CLI is ready to use$(NC)"
+
+# Endpoint example targets (auto-generated per resource)
+# Examples:
+
+# users-list:
+# 	uv run $(PROJECT_NAME) users list
+
+# users-get:
+# 	uv run $(PROJECT_NAME) users get --id 123
+
+# users-create:
+# 	uv run $(PROJECT_NAME) users create --name "Example"
+
+# transactions-list:
+# 	uv run $(PROJECT_NAME) transactions list
+
+# Documentation targets
+
+docs:
+	@echo "$(GREEN)Building documentation...$(NC)"
+	@if [ -f "mkdocs.yml" ]; then \
+		uv run mkdocs build; \
+		echo "$(GREEN)✓ Documentation built: site/index.html$(NC)"; \
+	else \
+		echo "$(YELLOW)mkdocs.yml not found. Skipping documentation build.$(NC)"; \
+	fi
+
+docs-serve:
+	@echo "$(GREEN)Serving documentation...$(NC)"
+	@if [ -f "mkdocs.yml" ]; then \
+		uv run mkdocs serve; \
+	else \
+		echo "$(YELLOW)mkdocs.yml not found.$(NC)"; \
+	fi
+
+prd:
+	@echo "$(GREEN)PRD.md location:$(NC)"
+	@ls -la PRD.md 2>/dev/null || echo "PRD.md not found in current directory"
+	@echo "$(GREEN)See documentation/ folder for comprehensive API documentation$(NC)"
+
+# Build targets
+
+build:
+	@echo "$(GREEN)Building distribution packages with uv...$(NC)"
+	uv build
+	@echo "$(GREEN)✓ Build complete: dist/$(NC)"
+
+clean:
+	@echo "$(GREEN)Cleaning build artifacts...$(NC)"
+	rm -rf build/ dist/ *.egg-info/
+	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
+	find . -type f -name "*.pyc" -delete
+	rm -rf htmlcov/ .coverage .pytest_cache
+	@echo "$(GREEN)✓ Clean complete$(NC)"
+
+release: clean build
+	@echo "$(GREEN)Release artifacts ready in dist/$(NC)"
+	@ls -lh dist/
+	@echo "$(YELLOW)Next: uv publish$(NC)"
+
+# Utility targets
+
+info:
+	@echo "$(GREEN)Project Information:$(NC)"
+	@echo "  Project: $(PROJECT_NAME)"
+	@echo "  uv version: $$(uv --version)"
+	@echo "  pyproject.toml: pyproject.toml"
+	@echo ""
+	@echo "$(GREEN)Project Dependencies:$(NC)"
+	@uv pip list | grep -E "click|requests|pandas|pytest" || true
+
+status:
+	@echo "$(GREEN)Git Status:$(NC)"
+	@git status --short || echo "Not a git repository"
+	@echo ""
+	@echo "$(GREEN)uv Lock File:$(NC)"
+	@ls -la uv.lock 2>/dev/null && echo "uv.lock exists" || echo "uv.lock not found"
+	@echo ""
+	@echo "$(GREEN)Environment:$(NC)"
+	@echo "  Working Dir: $$(pwd)"
+
+# Default target
+.DEFAULT_GOAL := help
+
+# Phony targets (don't represent files)
+.PHONY: help install install-dev lint format test dev build clean release docs info status

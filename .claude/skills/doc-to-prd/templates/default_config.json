@@ -1,0 +1,15 @@
+{
+  "api_base_url": "https://api.example.com/",
+  "cache_enabled": true,
+  "cache_ttl_days": 7,
+  "connection_pool_size": 10,
+  "request_timeout_seconds": 30,
+  "request_delay_ms": 100,
+  "max_retries": 3,
+  "retry_backoff_multiplier": 2,
+  "default_limit": 1000,
+  "default_format": "json",
+  "log_level": "INFO",
+  "chunk_size": 1000,
+  "verbose": false
+}
