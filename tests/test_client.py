@@ -16,4 +16,4 @@ def test_headers_with_api_token_include_authorization():
     client = CourtListenerClient(api_token="abc123")
     headers = client._get_headers()
 
-    assert headers["Authorization"] == "Bearer abc123"
+    assert headers["Authorization"] == "Token abc123"

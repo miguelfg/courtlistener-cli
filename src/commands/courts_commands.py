@@ -153,7 +153,7 @@ def count_courts(jurisdiction, court_type):
     """Return total matching courts count"""
     client = CourtListenerClient()
 
-    params: dict = {}
+    params: dict = {'limit': 1}
     if jurisdiction:
         params['jurisdiction'] = jurisdiction
     if court_type:
