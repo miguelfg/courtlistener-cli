@@ -34,7 +34,7 @@ def list_attorneys(docket, filter_nested_results, limit, max_pages, output_forma
     """
     client = CourtListenerClient()
 
-    params = {'limit': 100 if limit == 0 else max(limit, 1)}
+    params = {}
     if docket is not None:
         params['docket'] = docket
     if filter_nested_results:

@@ -349,7 +349,7 @@ def download_docs(docket_id, output_path, manifest_format):
         case_dir.mkdir(parents=True, exist_ok=True)
         click.echo(f"→ Case folder: {case_dir}")
 
-        # --- 2. Fetch all docket entries ---
+        # --- 2. Fetch docket entries for entry_number / description lookup ---
         click.echo("→ Fetching docket entries…")
         entries_data = paginate_endpoint(
             fetch_page=lambda params: client.get('/docket-entries/', params=params),
@@ -360,61 +360,95 @@ def download_docs(docket_id, output_path, manifest_format):
                 f"  → Page {page}: +{count} entries (total {acc})"
             ),
         )
-        entries = entries_data.get('results', [])
-        click.echo(f"→ {len(entries)} entries fetched")
+        # Build a lookup: docket-entry URL/ID → (entry_number, description)
+        entry_meta: dict = {}
+        for e in entries_data.get('results', []):
+            eid = e.get('id')
+            if eid:
+                entry_meta[eid] = {
+                    'entry_number': e.get('entry_number', ''),
+                    'description': (e.get('description') or '').strip(),
+                }
+        click.echo(f"→ {len(entry_meta)} entries fetched")
 
-        # --- 3. Download available PDFs and build manifest ---
+        # --- 3. Fetch ALL recap-documents for this docket directly ---
+        # Querying /recap-documents/ with docket_entry__docket avoids the
+        # truncated embedded list that /docket-entries/ returns per entry.
+        click.echo("→ Fetching all recap documents…")
+        docs_data = paginate_endpoint(
+            fetch_page=lambda params: client.get('/recap-documents/', params=params),
+            initial_params={
+                'docket_entry__docket': docket_id,
+                'is_available': True,
+                'page_size': 100,
+                'fields!': 'plain_text',
+            },
+            limit=0,
+            max_pages=0,
+            progress_logger=lambda page, count, acc, target: click.echo(
+                f"  → Page {page}: +{count} docs (total {acc})"
+            ),
+        )
+        all_docs = docs_data.get('results', [])
+        click.echo(f"→ {len(all_docs)} available recap documents found")
+
+        # --- 4. Download available PDFs and build manifest ---
         manifest_rows: List[dict] = []
         downloaded = 0
         skipped = 0
 
         download_headers = {'User-Agent': 'courtlistener-cli/1.0.0'}
 
-        for entry in entries:
-            entry_number = entry.get('entry_number', '')
-            description = (entry.get('description') or '').strip()
-            recap_docs = entry.get('recap_documents') or []
+        for doc in all_docs:
+            filepath_local = doc.get('filepath_local') or ''
+            if not filepath_local:
+                skipped += 1
+                continue
 
-            for doc in recap_docs:
-                if not doc.get('is_available'):
+            # Resolve entry metadata from the docket_entry reference
+            de_ref = doc.get('docket_entry') or ''
+            de_id = None
+            if isinstance(de_ref, int):
+                de_id = de_ref
+            elif isinstance(de_ref, str):
+                # URL like "https://.../docket-entries/12345/"
+                parts = [p for p in de_ref.rstrip('/').split('/') if p]
+                if parts and parts[-1].isdigit():
+                    de_id = int(parts[-1])
+            meta = entry_meta.get(de_id, {})
+            entry_number = meta.get('entry_number', '')
+            description = meta.get('description', '')
+
+            pdf_filename = Path(filepath_local).name
+            download_url = _STORAGE_BASE + filepath_local
+            dest = case_dir / pdf_filename
+
+            if dest.exists():
+                click.echo(f"  ✓ Already exists: {pdf_filename}")
+            else:
+                try:
+                    with httpx.stream('GET', download_url, headers=download_headers, timeout=60, follow_redirects=True) as r:
+                        r.raise_for_status()
+                        with open(dest, 'wb') as f:
+                            for chunk in r.iter_bytes(chunk_size=65536):
+                                f.write(chunk)
+                    click.echo(f"  ↓ {pdf_filename}  (entry {entry_number})")
+                    downloaded += 1
+                except Exception as exc:
+                    logger.warning("Failed to download %s: %s", pdf_filename, exc)
+                    click.echo(f"  ✗ Failed: {pdf_filename} — {exc}", err=True)
                     skipped += 1
                     continue
 
-                filepath_local = doc.get('filepath_local') or ''
-                if not filepath_local:
-                    skipped += 1
-                    continue
+            manifest_rows.append({
+                'pdf_filename': pdf_filename,
+                'case_folder': folder_name,
+                'entry_number': entry_number,
+                'filing_name': description,
+                'download_url': download_url,
+            })
 
-                pdf_filename = Path(filepath_local).name
-                download_url = _STORAGE_BASE + filepath_local
-                dest = case_dir / pdf_filename
-
-                if dest.exists():
-                    click.echo(f"  ✓ Already exists: {pdf_filename}")
-                else:
-                    try:
-                        with httpx.stream('GET', download_url, headers=download_headers, timeout=60, follow_redirects=True) as r:
-                            r.raise_for_status()
-                            with open(dest, 'wb') as f:
-                                for chunk in r.iter_bytes(chunk_size=65536):
-                                    f.write(chunk)
-                        click.echo(f"  ↓ {pdf_filename}  (entry {entry_number})")
-                        downloaded += 1
-                    except Exception as exc:
-                        logger.warning("Failed to download %s: %s", pdf_filename, exc)
-                        click.echo(f"  ✗ Failed: {pdf_filename} — {exc}", err=True)
-                        skipped += 1
-                        continue
-
-                manifest_rows.append({
-                    'pdf_filename': pdf_filename,
-                    'case_folder': folder_name,
-                    'entry_number': entry_number,
-                    'filing_name': description,
-                    'download_url': download_url,
-                })
-
-        # --- 4. Write manifest ---
+        # --- 5. Write manifest ---
         if manifest_rows:
             manifest_stem = f'manifest_{docket_id}'
             if manifest_format == 'xlsx':
@@ -452,7 +486,7 @@ def get_parties(docket_id, output_format, output_path, filename_stem):
         click.echo(f"→ Fetching parties for docket {docket_id}…")
         parties_data = paginate_endpoint(
             fetch_page=lambda params: client.get('/parties/', params=params),
-            initial_params={'docket': docket_id, 'limit': 100},
+            initial_params={'docket': docket_id},
             limit=0,
             max_pages=0,
             progress_logger=lambda page, count, acc, target: click.echo(
