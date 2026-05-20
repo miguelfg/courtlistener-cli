@@ -1,6 +1,7 @@
 """Click commands for dockets resource"""
 
 import csv
+import io
 import re
 import click
 import json
@@ -326,15 +327,14 @@ def count_dockets(court, case_name):
               help='Parent directory; a case-named subfolder is created automatically')
 @click.option('--manifest', 'manifest_format', default='xlsx',
               type=click.Choice(['xlsx', 'csv']),
-              help='Format for the tarentula mapping spreadsheet')
-@click.option('--available-only', is_flag=True, default=False,
-              help='Fetch only documents available for free download (skips unavailable from API query)')
-def download_docs(docket_id, output_path, manifest_format, available_only):
-    """Download all free PDFs for a docket and generate a tarentula manifest.
+              help='Format for the manifest spreadsheet')
+@click.option('--all-docs', 'all_docs', is_flag=True, default=False,
+              help='Also fetch unavailable docs (slower — paginates all recap documents)')
+def download_docs(docket_id, output_path, manifest_format, all_docs):
+    """Download all free PDFs for a docket and generate a manifest.
 
-    Creates a folder named "{case_name} ; {docket_number}" under OUTPUT and
-    writes a manifest spreadsheet mapping each PDF filename to its entry
-    number, filing description, and case folder — ready for tarentula ingestion.
+    By default only fetches available docs (is_available=True), which is fast
+    and avoids rate-limit throttling. Use --all-docs to include unavailable ones.
     """
     client = CourtListenerClient()
 
@@ -351,119 +351,70 @@ def download_docs(docket_id, output_path, manifest_format, available_only):
         case_dir.mkdir(parents=True, exist_ok=True)
         click.echo(f"→ Case folder: {case_dir}")
 
-        # --- 2. Fetch docket entries for entry_number / description lookup ---
-        click.echo("→ Fetching docket entries…")
-        entries_data = paginate_endpoint(
-            fetch_page=lambda params: client.get('/docket-entries/', params=params),
-            initial_params={'docket': docket_id, 'page_size': 100},
-            limit=0,
-            max_pages=0,
-            progress_logger=lambda page, count, acc, target: click.echo(
-                f"  → Page {page}: +{count} entries (total {acc})"
-            ),
-        )
-        # Build a lookup: docket-entry URL/ID → (entry_number, description)
-        entry_meta: dict = {}
-        for e in entries_data.get('results', []):
-            eid = e.get('id')
-            if eid:
-                entry_meta[eid] = {
-                    'entry_number': e.get('entry_number', ''),
-                    'description': (e.get('description') or '').strip(),
-                }
-        click.echo(f"→ {len(entry_meta)} entries fetched")
+        # --- 2. Fetch doc list via CSV export (fast) or API pagination (fallback) ---
+        csv_export_url = f"https://www.courtlistener.com/docket/{docket_id}/download/"
+        doc_rows = _try_csv_export(csv_export_url, client, case_dir)
 
-        # --- 3. Fetch ALL recap-documents for this docket directly ---
-        # Querying /recap-documents/ with docket_entry__docket avoids the
-        # truncated embedded list that /docket-entries/ returns per entry.
-        click.echo("→ Fetching all recap documents…")
-        recap_params: dict = {
-            'docket_entry__docket': docket_id,
-            'page_size': 100,
-            'fields!': 'plain_text',
-        }
-        if available_only:
-            recap_params['is_available'] = True
+        if doc_rows is None:
+            click.echo("→ CSV export unavailable, falling back to API pagination…")
+            doc_rows = _doc_rows_from_api(docket_id, client, case_dir, not all_docs)
+        else:
+            if not all_docs:
+                doc_rows = [r for r in doc_rows if r['is_available']]
+            click.echo(f"→ {len(doc_rows)} recap documents loaded from CSV export")
 
-        docs_data = paginate_endpoint(
-            fetch_page=lambda params: client.get('/recap-documents/', params=params),
-            initial_params=recap_params,
-            limit=0,
-            max_pages=0,
-            progress_logger=lambda page, count, acc, target: click.echo(
-                f"  → Page {page}: +{count} docs (total {acc})"
-            ),
-        )
-        all_docs = docs_data.get('results', [])
-        available_count = sum(1 for d in all_docs if d.get('is_available'))
-        click.echo(f"→ {len(all_docs)} recap documents found ({available_count} available for download)")
+        docs_path = save_xlsx(doc_rows, case_dir, filename_stem=f'docs_{docket_id}')
+        click.echo(f"→ Docs metadata saved to {docs_path}")
 
-        # --- 4. Download available PDFs and build manifest ---
-        manifest_rows: List[dict] = []
+        # --- 4. Download available PDFs ---
         downloaded = 0
         skipped = 0
-
         download_headers = {'User-Agent': 'courtlistener-cli/1.0.0'}
 
-        for doc in all_docs:
-            is_available = bool(doc.get('is_available'))
-
-            # Resolve entry metadata from the docket_entry reference
-            de_ref = doc.get('docket_entry') or ''
-            de_id = None
-            if isinstance(de_ref, int):
-                de_id = de_ref
-            elif isinstance(de_ref, str):
-                # URL like "https://.../docket-entries/12345/"
-                parts = [p for p in de_ref.rstrip('/').split('/') if p]
-                if parts and parts[-1].isdigit():
-                    de_id = int(parts[-1])
-            meta = entry_meta.get(de_id, {})
-            entry_number = meta.get('entry_number', '')
-            description = meta.get('description', '')
-
-            filepath_local = doc.get('filepath_local') or ''
-            pdf_filename = Path(filepath_local).name if filepath_local else ''
-            download_url = (_STORAGE_BASE + filepath_local) if filepath_local else ''
-            download_status = 'not_available'
-
-            if is_available and filepath_local:
-                dest = case_dir / pdf_filename
-                if dest.exists():
-                    click.echo(f"  ✓ Already exists: {pdf_filename}")
-                    download_status = 'already_exists'
-                else:
-                    try:
-                        with httpx.stream('GET', download_url, headers=download_headers, timeout=60, follow_redirects=True) as r:
-                            r.raise_for_status()
-                            with open(dest, 'wb') as f:
-                                for chunk in r.iter_bytes(chunk_size=65536):
-                                    f.write(chunk)
-                        click.echo(f"  ↓ {pdf_filename}  (entry {entry_number})")
-                        downloaded += 1
-                        download_status = 'downloaded'
-                    except Exception as exc:
-                        logger.warning("Failed to download %s: %s", pdf_filename, exc)
-                        click.echo(f"  ✗ Failed: {pdf_filename} — {exc}", err=True)
-                        skipped += 1
-                        download_status = 'failed'
-            else:
+        for row in doc_rows:
+            if not row['is_available'] or not row['pdf_filename']:
                 skipped += 1
+                row['download_status'] = 'not_available'
+                continue
 
-            manifest_rows.append({
-                'pdf_filename': pdf_filename,
-                'case_folder': folder_name,
-                'entry_number': entry_number,
-                'filing_name': description,
-                'is_available': is_available,
-                'download_status': download_status,
-                'download_url': download_url,
-                'document_number': doc.get('document_number', ''),
-                'attachment_number': doc.get('attachment_number', ''),
-                'recap_doc_id': doc.get('id', ''),
-            })
+            dest = case_dir / row['pdf_filename']
+            if dest.exists():
+                click.echo(f"  ✓ Already exists: {row['pdf_filename']}")
+                row['download_status'] = 'already_exists'
+                row['local_file_exists'] = True
+                continue
+
+            try:
+                with httpx.stream('GET', row['download_url'], headers=download_headers,
+                                  timeout=60, follow_redirects=True) as r:
+                    r.raise_for_status()
+                    with open(dest, 'wb') as f:
+                        for chunk in r.iter_bytes(chunk_size=65536):
+                            f.write(chunk)
+                click.echo(f"  ↓ {row['pdf_filename']}  (doc {row['document_number']})")
+                downloaded += 1
+                row['download_status'] = 'downloaded'
+                row['local_file_exists'] = True
+            except Exception as exc:
+                logger.warning("Failed to download %s: %s", row['pdf_filename'], exc)
+                click.echo(f"  ✗ Failed: {row['pdf_filename']} — {exc}", err=True)
+                skipped += 1
+                row['download_status'] = 'failed'
 
         # --- 5. Write manifest ---
+        manifest_rows = [{
+            'pdf_filename': r['pdf_filename'],
+            'case_folder': folder_name,
+            'document_number': r['document_number'],
+            'attachment_number': r['attachment_number'],
+            'filing_description': r['filing_description'],
+            'is_available': r['is_available'],
+            'download_status': r['download_status'],
+            'local_file_exists': r['local_file_exists'],
+            'download_url': r['download_url'],
+            'recap_doc_id': r['recap_doc_id'],
+        } for r in doc_rows]
+
         if manifest_rows:
             manifest_stem = f'manifest_{docket_id}'
             if manifest_format == 'xlsx':
@@ -472,13 +423,101 @@ def download_docs(docket_id, output_path, manifest_format, available_only):
                 manifest_path = save_csv(manifest_rows, case_dir, filename_stem=manifest_stem)
             click.echo(f"✓ Manifest saved to {manifest_path}")
         else:
-            click.echo("No downloadable documents found — manifest not written")
+            click.echo("No documents found — manifest not written")
 
         click.echo(f"✓ Downloaded: {downloaded}  |  Skipped/unavailable: {skipped}")
 
     except Exception as e:
         click.echo(f"Error: {e}", err=True)
         raise SystemExit(1)
+
+
+def _try_csv_export(url: str, client: 'CourtListenerClient', case_dir: Path) -> List[dict] | None:
+    """Fetch the CourtListener docket CSV export. Returns doc_rows or None if unavailable."""
+    headers = {'User-Agent': 'courtlistener-cli/1.0.0'}
+    if client.api_token:
+        headers['Authorization'] = f'Token {client.api_token}'
+    try:
+        response = httpx.get(url, headers=headers, timeout=30, follow_redirects=True)
+        if response.status_code in (401, 403, 404):
+            return None
+        response.raise_for_status()
+    except httpx.HTTPStatusError:
+        return None
+
+    # Save raw CSV into the case folder
+    csv_filename = response.headers.get('content-disposition', '')
+    csv_filename = csv_filename.split('filename=')[-1].strip('"') if 'filename=' in csv_filename else 'docket_export.csv'
+    csv_path = case_dir / csv_filename
+    csv_path.write_bytes(response.content)
+    click.echo(f"→ CSV export saved to {csv_path}")
+
+    rows = []
+    for rec in csv.DictReader(io.StringIO(response.text)):
+        filepath = rec.get('recapdocument_filepath_local', '').strip()
+        pdf_filename = Path(filepath).name if filepath else ''
+        rows.append({
+            'recap_doc_id': rec.get('recapdocument_id', ''),
+            'entry_number': rec.get('docketentry_entry_number', ''),
+            'filing_description': rec.get('docketentry_description', ''),
+            'document_number': rec.get('recapdocument_document_number', ''),
+            'attachment_number': rec.get('recapdocument_attachment_number', ''),
+            'doc_description': rec.get('recapdocument_description', ''),
+            'is_available': rec.get('recapdocument_is_available', '').strip() == 'True',
+            'is_free_on_pacer': rec.get('recapdocument_is_free_on_pacer', '').strip() == 'True',
+            'page_count': rec.get('recapdocument_page_count', ''),
+            'file_size': rec.get('recapdocument_file_size', ''),
+            'date_upload': rec.get('recapdocument_date_upload', ''),
+            'pdf_filename': pdf_filename,
+            'download_url': filepath,  # already a full URL in the CSV export
+            'local_file_exists': (case_dir / pdf_filename).exists() if pdf_filename else False,
+            'download_status': '',
+        })
+    return rows
+
+
+def _doc_rows_from_api(docket_id: int, client: 'CourtListenerClient', case_dir: Path,
+                       available_only: bool) -> List[dict]:
+    """Fallback: build doc_rows by paginating the recap-documents API."""
+    click.echo("→ Fetching recap documents via API…")
+    recap_params: dict = {'docket_entry__docket': docket_id, 'page_size': 100}
+    if available_only:
+        recap_params['is_available'] = True
+
+    docs_data = paginate_endpoint(
+        fetch_page=lambda params: client.get('/recap-documents/', params=params),
+        initial_params=recap_params,
+        limit=0,
+        max_pages=0,
+        progress_logger=lambda page, count, acc, target: click.echo(
+            f"  → Page {page}: +{count} docs (total {acc})"
+        ),
+    )
+    fetched_docs = docs_data.get('results', [])
+    click.echo(f"→ {len(fetched_docs)} recap documents fetched")
+
+    rows = []
+    for doc in fetched_docs:
+        filepath_local = doc.get('filepath_local') or ''
+        pdf_filename = Path(filepath_local).name if filepath_local else ''
+        rows.append({
+            'recap_doc_id': doc.get('id', ''),
+            'entry_number': doc.get('document_number', ''),
+            'filing_description': (doc.get('description') or '').strip(),
+            'document_number': doc.get('document_number', ''),
+            'attachment_number': doc.get('attachment_number', ''),
+            'doc_description': (doc.get('description') or '').strip(),
+            'is_available': bool(doc.get('is_available')),
+            'is_free_on_pacer': bool(doc.get('is_free_on_pacer')),
+            'page_count': doc.get('page_count', ''),
+            'file_size': doc.get('file_size', ''),
+            'date_upload': doc.get('date_upload', ''),
+            'pdf_filename': pdf_filename,
+            'download_url': (_STORAGE_BASE + filepath_local) if filepath_local else '',
+            'local_file_exists': (case_dir / pdf_filename).exists() if pdf_filename else False,
+            'download_status': '',
+        })
+    return rows
 
 
 @dockets.command('parties')
