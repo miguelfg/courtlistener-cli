@@ -66,12 +66,24 @@ uv run courtlistener-cli citation-lookup citation --volume 576 --reporter "U.S."
 | Variable | Default | Purpose |
 |---|---|---|
 | `COURTLISTENER_API_TOKEN` | — | **Required** — Bearer token |
+| `COURTLISTENER_SESSION_ID` | — | **Recommended** — Browser session cookie for fast CSV export (see below) |
 | `COURTLISTENER_BASE_URL` | `https://www.courtlistener.com/api/rest/v4` | API base URL |
 | `COURTLISTENER_TIMEOUT` | `30` | Request timeout (seconds) |
 | `LOG_LEVEL` | `DEBUG` | Logging verbosity |
 | `LOG_TO_FILE` | `false` | Write logs to file |
 | `OUTPUT_FORMAT` | `xlsx` | Default output format |
 | `INCLUDE_TIMESTAMP` | `true` | Timestamp in output filenames |
+
+#### Getting your session ID (`COURTLISTENER_SESSION_ID`)
+
+The `dockets download-docs` command can fetch a full doc list in one request instead of paginating through hundreds of API pages — but that endpoint requires a browser session cookie rather than the API token.
+
+1. Log in to [courtlistener.com](https://www.courtlistener.com) in your browser
+2. Open DevTools → **Application** → **Cookies** → `https://www.courtlistener.com`
+3. Copy the value of the `sessionid` cookie
+4. Add it to `.env`: `COURTLISTENER_SESSION_ID=<value>`
+
+Without this, `download-docs` falls back to API pagination (slower, more rate-limited). Sessions expire periodically — refresh the value when you start seeing the fallback again.
 
 ### Pagination Behavior (all list commands)
 
