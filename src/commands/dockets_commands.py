@@ -433,12 +433,29 @@ def download_docs(docket_id, output_path, manifest_format, all_docs):
 
 
 def _try_csv_export(url: str, client: 'CourtListenerClient', case_dir: Path) -> List[dict] | None:
-    """Fetch the CourtListener docket CSV export. Returns doc_rows or None if unavailable."""
-    headers = {'User-Agent': 'courtlistener-cli/1.0.0'}
-    if client.api_token:
-        headers['Authorization'] = f'Token {client.api_token}'
+    """Fetch the CourtListener docket CSV export. Returns doc_rows or None if unavailable.
+
+    The /docket/{id}/download/ endpoint requires a browser session cookie, not
+    the API token. Set COURTLISTENER_SESSION_ID in .env (DevTools → Application
+    → Cookies → sessionid).
+    """
+    from ..config import config
+    session_id = config.session_id
+    if not session_id:
+        return None
+
+    docket_url = url.replace('/download/', '/')
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36',
+        'Accept': '*/*',
+        'hx-request': 'true',
+        'hx-current-url': docket_url,
+        'Referer': docket_url,
+    }
+    cookies = {'sessionid': session_id}
+
     try:
-        response = httpx.get(url, headers=headers, timeout=30, follow_redirects=True)
+        response = httpx.get(url, headers=headers, cookies=cookies, timeout=30, follow_redirects=True)
         if response.status_code in (401, 403, 404):
             return None
         response.raise_for_status()

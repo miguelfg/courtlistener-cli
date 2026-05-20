@@ -18,6 +18,11 @@ class Config:
     def api_token(self) -> str:
         """Get API token from environment"""
         return os.getenv('COURTLISTENER_API_TOKEN', '')
+
+    @property
+    def session_id(self) -> str:
+        """Get browser session ID for web endpoints (e.g. CSV export)"""
+        return os.getenv('COURTLISTENER_SESSION_ID', '')
     
     @property
     def base_url(self) -> str:
