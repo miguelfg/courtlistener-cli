@@ -1,0 +1,44 @@
+site_name: CourtListener CLI
+site_description: Documentation for the CourtListener REST API Python CLI client
+site_url: https://miguelfg.github.io/courtlistener-cli/
+repo_url: https://github.com/miguelfg/courtlistener-cli
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - content.code.copy
+markdown_extensions:
+  - admonition
+  - attr_list
+  - pymdownx.superfences
+  - pymdownx.highlight
+nav:
+  - Home: index.md
+  - Installation: installation.md
+  - Authentication: authentication.md
+  - Quickstart: quickstart.md
+  - Command Reference: command-reference.md
+  - Examples:
+      - Overview: examples/index.md
+      - Opinions: examples/opinions.md
+      - Search: examples/search.md
+      - Courts: examples/courts.md
+      - Clusters: examples/clusters.md
+      - Dockets: examples/dockets.md
+      - Docket Entries: examples/docket-entries.md
+      - RECAP Documents: examples/recap-documents.md
+      - Parties: examples/parties.md
+      - Attorneys: examples/attorneys.md
+      - People: examples/people.md
+      - Positions: examples/positions.md
+      - Audio: examples/audio.md
+      - Financial Disclosures: examples/financial.md
+      - Alerts: examples/alerts.md
+      - Docket Alerts: examples/docket-alerts.md
+      - Citation Lookup: examples/citation-lookup.md
+      - Tags: examples/tags.md
+      - Batch: examples/batch.md
+  - Search Types: SEARCH_TYPES.md
+  - API Update Summary: UPDATE_SUMMARY.md

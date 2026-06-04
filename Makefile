@@ -1,6 +1,6 @@
 # CourtListener Python CLI - Development Makefile
 
-.PHONY: install install-dev lint format test run help clean search-slim-example docket-69717740 dockets-list docket-4134326-download-docs docket-4134326-parties
+.PHONY: install install-dev install-docs docs-build docs-serve lint format test run help clean search-slim-example docket-69717740 dockets-list docket-4134326-download-docs docket-4134326-parties
 
 PROJECT_NAME = courtlistener-cli
 
@@ -40,6 +40,15 @@ install:
 
 install-dev:
 	uv pip install -e ".[dev]"
+
+install-docs:
+	uv pip install -e ".[docs]"
+
+docs-build:
+	uv run --extra docs mkdocs build
+
+docs-serve:
+	uv run --extra docs mkdocs serve
 
 lint:
 	-ruff check src/ tests/ --fix

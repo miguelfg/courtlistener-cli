@@ -2,6 +2,8 @@
 
 Python CLI tool for the [CourtListener REST API v4](https://www.courtlistener.com/help/api/rest/). Covers case law, PACER federal court data, judges, oral arguments, financial disclosures, citations, and alerts — with batch processing and XLSX/CSV/JSON export.
 
+Documentation: <https://miguelfg.github.io/courtlistener-cli/>
+
 ## Features
 
 - **18 command groups** — opinions, dockets, clusters, PACER entries/documents, parties, attorneys, people, positions, financial disclosures, oral arguments, search, alerts, citation lookup, tags

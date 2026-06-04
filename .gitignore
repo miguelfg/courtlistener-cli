@@ -29,6 +29,7 @@ ENV/
 .coverage
 .coverage.*
 htmlcov/
+site/
 
 # Logs and local runtime outputs
 *.log

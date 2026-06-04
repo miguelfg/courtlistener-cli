@@ -20,6 +20,13 @@ dependencies = [
     "openpyxl>=3.1.2",
 ]
 
+[project.optional-dependencies]
+docs = [
+    "mkdocs>=1.6.0; python_version >= '3.9'",
+    "mkdocs-material>=9.5.0; python_version >= '3.9'",
+    "mkdocs-click>=0.9.0; python_version >= '3.9'",
+]
+
 [project.scripts]
 courtlistener-cli = "src.cli:main"
 
