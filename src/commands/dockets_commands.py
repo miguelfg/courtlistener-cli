@@ -85,12 +85,13 @@ def dockets():
               help='Maximum pages to fetch (0 = no page cap)')
 @click.option('--offset', default=0, help='Pagination offset')
 @click.option('--court', help='Filter by court ID')
+@click.option('--docket-number', help='Filter by docket number')
 @click.option('--case-name', help='Filter by case name')
 @click.option('--format', 'output_format', default='json',
               type=click.Choice(['json', 'csv', 'xlsx']))
 @click.option('--output', 'output_path', default='./output',
               type=click.Path())
-def list_dockets(input_file, column, limit, max_pages, offset, court, case_name, output_format, output_path):
+def list_dockets(input_file, column, limit, max_pages, offset, court, docket_number, case_name, output_format, output_path):
     """List case dockets or batch query from input CSV/XLSX."""
     client = CourtListenerClient()
 
@@ -127,6 +128,8 @@ def list_dockets(input_file, column, limit, max_pages, offset, court, case_name,
                         }
                         if court:
                             params['court'] = court
+                        if docket_number:
+                            params['docket_number'] = docket_number
                         if case_name:
                             params['case_name'] = case_name
                         docket_page_data = paginate_endpoint(
@@ -173,6 +176,8 @@ def list_dockets(input_file, column, limit, max_pages, offset, court, case_name,
             params = {'limit': 100 if limit == 0 else max(limit, 1), 'offset': offset}
             if court:
                 params['court'] = court
+            if docket_number:
+                params['docket_number'] = docket_number
             if case_name:
                 params['case_name'] = case_name
 

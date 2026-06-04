@@ -97,6 +97,38 @@ def test_dockets_list_batch_csv_uses_column_values(monkeypatch, tmp_path):
     assert calls[1][1]["docket_number"] == "B-456"
 
 
+def test_dockets_list_filters_by_docket_number(monkeypatch, tmp_path):
+    """Direct dockets list should support docket-number filtering."""
+    calls = []
+
+    def mock_get(self, endpoint, **kwargs):
+        calls.append((endpoint, kwargs.get("params")))
+        return {"count": 1, "results": [{"id": 4214664}]}
+
+    monkeypatch.setattr("src.commands.dockets_commands.CourtListenerClient.get", mock_get)
+
+    output_dir = tmp_path / "out"
+    runner = CliRunner()
+    result = runner.invoke(
+        main,
+        [
+            "dockets",
+            "list",
+            "--docket-number",
+            "1:16-cv-00745",
+            "--court",
+            "dcd",
+            "--output",
+            str(output_dir),
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert calls[0][0] == "/dockets/"
+    assert calls[0][1]["docket_number"] == "1:16-cv-00745"
+    assert calls[0][1]["court"] == "dcd"
+
+
 def test_search_query_paginates_until_requested_limit(monkeypatch, tmp_path):
     """Search should aggregate pages until it reaches requested total."""
     page_1 = {

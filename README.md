@@ -150,30 +150,60 @@ uv run courtlistener-cli clusters count --court scotus
 
 Top-level case metadata. Used for both case law and PACER data.
 
+Common one-off exports:
+
 ```bash
+# First 50 dockets in a court, written to ./output as JSON
 uv run courtlistener-cli dockets list --court dcd --limit 50
+
+# Find a known docket number. Docket numbers are not globally unique, so include --court when you know it.
 uv run courtlistener-cli dockets list --docket-number "1:16-cv-00745" --court dcd
-uv run courtlistener-cli dockets list --date-filed-after 2023-01-01 --format xlsx
+
+# Search by case name within a court
+uv run courtlistener-cli dockets list --court dcd --case-name "National Veterans" --limit 25
+
+# Export a spreadsheet instead of JSON
+uv run courtlistener-cli dockets list --court scotus --limit 100 --format xlsx
+
+# Send the generated file to a different output directory
+uv run courtlistener-cli dockets list --court ca9 --limit 100 --format csv --output ./output/ca9
+
+# Resume from an API offset when splitting a large export into chunks
+uv run courtlistener-cli dockets list --court dcd --offset 500 --limit 500 --format xlsx
+
+# Export every matching docket. This can be slow and may consume quota.
+uv run courtlistener-cli dockets list --court scotus --limit 0 --max-pages 0 --format xlsx
+
 uv run courtlistener-cli dockets get 4214664
 uv run courtlistener-cli dockets count --court scotus
 ```
 
-**Batch mode** — supply a spreadsheet column of docket numbers:
+**Batch mode** — supply a CSV/XLSX column of docket numbers or docket IDs:
 
 ```bash
+# Look up each docket number in the spreadsheet column
 uv run courtlistener-cli dockets list data/dockets.xlsx --column docketNumber --limit 50
-uv run courtlistener-cli dockets list data/dockets.csv  --column docketNumber --court dcd --limit 0 --max-pages 0
+
+# Limit each docket-number lookup to a specific court
+uv run courtlistener-cli dockets list data/dockets.csv --column docketNumber --court dcd --limit 0 --max-pages 0 --format xlsx
+
+# If the column is named id or docket_id, values are fetched directly by docket ID
+uv run courtlistener-cli dockets list data/dockets.xlsx --column docket_id --format csv
 ```
 
-Results include a `_query_value` column tracing which input row triggered each result.
+Batch results include a `_query_value` column tracing which input row triggered each result.
 
 | Option | Description |
 |---|---|
 | `--court TEXT` | Filter by court ID |
 | `--docket-number TEXT` | Filter by docket number |
 | `--case-name TEXT` | Filter by case name |
-| `--date-filed-after DATE` | ISO-8601 lower bound |
-| `--date-filed-before DATE` | ISO-8601 upper bound |
+| `--column TEXT` | Batch input column containing docket numbers or IDs |
+| `--limit INTEGER` | Total results to export per request; `0` with `--max-pages 0` exports all matches |
+| `--max-pages INTEGER` | Maximum pages to fetch; `0` means no page cap |
+| `--offset INTEGER` | API pagination offset |
+| `--format json\|csv\|xlsx` | Output format |
+| `--output PATH` | Directory for generated files |
 
 ---
 
