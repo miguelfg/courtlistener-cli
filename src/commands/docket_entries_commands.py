@@ -29,7 +29,7 @@ def list_docket_entries(docket, limit, max_pages, order_by, output_format, outpu
     """List docket entries for a PACER docket"""
     client = CourtListenerClient()
 
-    params = {'docket': docket, 'limit': 100 if limit == 0 else max(limit, 1)}
+    params = {'docket': docket, 'page_size': 100 if limit == 0 else max(limit, 1)}
     if order_by:
         params['order_by'] = order_by
 

@@ -31,7 +31,7 @@ def list_opinions(limit, max_pages, offset, search, output_format, output_path):
     """List opinions with pagination"""
     client = CourtListenerClient()
     
-    params = {'limit': 100 if limit == 0 else max(limit, 1), 'offset': offset}
+    params = {'page_size': 100 if limit == 0 else max(limit, 1)}
     if search:
         params['search'] = search
     
@@ -85,7 +85,7 @@ def count_opinions(search):
     """Return total matching opinions count"""
     client = CourtListenerClient()
 
-    params = {'limit': 1}
+    params = {'page_size': 1}
     if search:
         params['search'] = search
 

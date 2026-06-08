@@ -35,7 +35,7 @@ def list_clusters(limit, max_pages, docket, docket_number, court,
     """List opinion clusters with pagination"""
     client = CourtListenerClient()
 
-    params = {'limit': 100 if limit == 0 else max(limit, 1)}
+    params = {'page_size': 100 if limit == 0 else max(limit, 1)}
     if docket:
         params['docket'] = docket
     if docket_number:
@@ -110,7 +110,7 @@ def count_clusters(docket, court):
     """Return total matching clusters count"""
     client = CourtListenerClient()
 
-    params = {'limit': 1}
+    params = {'page_size': 1}
     if docket:
         params['docket'] = docket
     if court:

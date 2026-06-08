@@ -27,7 +27,7 @@ def list_alerts(limit, max_pages, output_format, output_path):
     """List your search alerts"""
     client = CourtListenerClient()
 
-    params = {'limit': 100 if limit == 0 else max(limit, 1)}
+    params = {'page_size': 100 if limit == 0 else max(limit, 1)}
 
     try:
         output_data = paginate_endpoint(
@@ -156,7 +156,7 @@ def list_docket_alerts(limit, max_pages, output_format, output_path):
     """List your docket alerts"""
     client = CourtListenerClient()
 
-    params = {'limit': 100 if limit == 0 else max(limit, 1)}
+    params = {'page_size': 100 if limit == 0 else max(limit, 1)}
 
     try:
         output_data = paginate_endpoint(

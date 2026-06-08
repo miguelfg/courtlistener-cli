@@ -33,7 +33,7 @@ def list_recap_documents(docket_entry, is_available, limit, max_pages, order_by,
 
     # Exclude plain_text by default — it is large and significantly slows responses
     params = {
-        'limit': 100 if limit == 0 else max(limit, 1),
+        'page_size': 100 if limit == 0 else max(limit, 1),
         'fields!': 'plain_text',
     }
     if docket_entry is not None:

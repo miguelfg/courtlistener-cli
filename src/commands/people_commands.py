@@ -29,7 +29,7 @@ def list_people(limit, max_pages, offset, name, output_format, output_path):
     """List judges and attorneys"""
     client = CourtListenerClient()
     
-    params = {'limit': 100 if limit == 0 else max(limit, 1), 'offset': offset}
+    params = {'page_size': 100 if limit == 0 else max(limit, 1)}
     if name:
         params['name'] = name
     
@@ -77,7 +77,7 @@ def count_people(name):
     """Return total matching people count"""
     client = CourtListenerClient()
 
-    params = {'limit': 1}
+    params = {'page_size': 1}
     if name:
         params['name'] = name
 

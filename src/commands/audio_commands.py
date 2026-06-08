@@ -30,7 +30,7 @@ def list_audio(limit, max_pages, offset, court, year, output_format, output_path
     """List oral argument recordings"""
     client = CourtListenerClient()
     
-    params = {'limit': 100 if limit == 0 else max(limit, 1), 'offset': offset}
+    params = {'page_size': 100 if limit == 0 else max(limit, 1)}
     if court:
         params['court'] = court
     if year:
@@ -82,7 +82,7 @@ def count_audio(court, year):
     """Return total matching recordings count"""
     client = CourtListenerClient()
 
-    params = {'limit': 1}
+    params = {'page_size': 1}
     if court:
         params['court'] = court
     if year:

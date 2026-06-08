@@ -30,7 +30,7 @@ def list_positions(person, court, limit, max_pages, order_by, output_format, out
     """List judicial positions held by people"""
     client = CourtListenerClient()
 
-    params = {'limit': 100 if limit == 0 else max(limit, 1)}
+    params = {'page_size': 100 if limit == 0 else max(limit, 1)}
     if person is not None:
         params['person'] = person
     if court:

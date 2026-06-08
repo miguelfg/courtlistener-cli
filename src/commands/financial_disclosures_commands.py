@@ -17,7 +17,7 @@ def _list_endpoint(endpoint: str, resource_label: str, extra_params: dict,
     """Shared list logic for all financial sub-resources."""
     client = CourtListenerClient()
 
-    params = {'limit': 100 if limit == 0 else max(limit, 1), **extra_params}
+    params = {'page_size': 100 if limit == 0 else max(limit, 1), **extra_params}
 
     try:
         output_data = paginate_endpoint(
