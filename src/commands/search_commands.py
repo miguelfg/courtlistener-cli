@@ -18,6 +18,8 @@ def search():
 @click.option('--q', required=True, help='Search query')
 @click.option('--type', 'search_type', default='r',
               help='Type code (default: r).')
+@click.option('--court', default=None,
+              help='Filter by court ID (e.g. dcd, ca9). Matches court_id field in results.')
 @click.option('--limit', default=20, type=int,
               help='Total results to export; use 0 with --max-pages 0 to export all results')
 @click.option('--max-pages', default=10, type=int,
@@ -33,7 +35,7 @@ def search():
               help='Output filename stem (without extension)')
 @click.option('--list-sep', 'list_sep', default=';',
               help='Separator for list fields in CSV/XLSX (empty string or "none" to keep as JSON)')
-def search_query(q, search_type, limit, max_pages, offset, output_format, output_path, slim, filename_stem, list_sep):
+def search_query(q, search_type, court, limit, max_pages, offset, output_format, output_path, slim, filename_stem, list_sep):
     """Search for opinions, dockets, and other data"""
     client = CourtListenerClient()
 
@@ -44,6 +46,8 @@ def search_query(q, search_type, limit, max_pages, offset, output_format, output
             'limit': 100 if limit == 0 else max(limit, 1),
             'offset': offset
         }
+        if court:
+            params['court'] = court
         output_data = paginate_endpoint(
             fetch_page=lambda request_params: client.get('/search/', params=request_params),
             initial_params=params,
@@ -103,6 +107,8 @@ def search_query(q, search_type, limit, max_pages, offset, output_format, output
                     f"--format {output_format}",
                     f"--filename {filename_stem}",
                 ]
+                if court:
+                    parts.append(f"--court {court}")
                 if slim:
                     parts.append("--slim")
                 if list_sep != ';':
@@ -160,19 +166,21 @@ def advanced_search(court, judge, date_from, date_to, limit, output_format):
 @click.option('--q', required=True, help='Search query')
 @click.option('--type', 'search_type', default='r',
               help='Type code (default: r).')
-def count_search(q, search_type):
+@click.option('--court', default=None,
+              help='Filter by court ID (e.g. dcd, ca9). Matches court_id field in results.')
+def count_search(q, search_type, court):
     """Return total matching search results count"""
     client = CourtListenerClient()
 
     try:
-        result = client.get(
-            '/search/',
-            params={
-                'q': q,
-                'type': search_type,
-                'limit': 1,
-            },
-        )
+        params = {
+            'q': q,
+            'type': search_type,
+            'limit': 1,
+        }
+        if court:
+            params['court'] = court
+        result = client.get('/search/', params=params)
         click.echo(result.get('count', 0))
     except Exception as e:
         click.echo(f"Error: {e}", err=True)

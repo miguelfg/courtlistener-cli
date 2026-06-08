@@ -68,6 +68,36 @@ uv run courtlistener-cli search count --q '"serial number" "firearm"' --type r
 uv run courtlistener-cli search count --q '"serial number" "firearm"' --type rd
 ```
 
+## Filtering by Court (`--court`)
+
+Both `search query` and `search count` accept a `--court` option that narrows results to a single court.
+
+Pass the **court ID slug** (the `court_id` field in exported results), not the full court name.
+
+```bash
+# dcd = U.S. District Court for the District of Columbia
+uv run courtlistener-cli search query --q "1:16-cv-00745" --type r --court dcd --format csv
+
+# ca9 = U.S. Court of Appeals, 9th Circuit
+uv run courtlistener-cli search query --q '"serial number" "firearm"' --type d --court ca9 --limit 50 --format xlsx
+
+# Count before a large export
+uv run courtlistener-cli search count --q '"habeas corpus"' --type rd --court nysd
+```
+
+Common court ID slugs:
+
+| Slug | Court |
+|------|-------|
+| `dcd` | D.D.C. (District of Columbia) |
+| `nysd` | S.D.N.Y. |
+| `ca9` | 9th Circuit |
+| `ca2` | 2nd Circuit |
+| `txnd` | N.D. Tex. |
+
+> **Tip:** The `court_id` value from your exported CSV/XLSX is always the correct slug to pass to `--court`.
+> The other court fields in results (`court`, `court_citation_string`) are display strings and are **not** accepted by the filter.
+
 ## Notes
 
 - For large result sets, API counts in some modes may be approximate.

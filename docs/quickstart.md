@@ -36,3 +36,11 @@ Count before exporting a large result set:
 ```bash
 uv run courtlistener-cli search count --q '"habeas corpus"' --type r
 ```
+
+Filter search results to a specific court:
+
+```bash
+# Use the court_id slug from your exported data (e.g. dcd, ca9, nysd)
+uv run courtlistener-cli search query --q "1:16-cv-00745" --type r --court dcd --format csv
+uv run courtlistener-cli search count --q '"habeas corpus"' --type r --court ca9
+```

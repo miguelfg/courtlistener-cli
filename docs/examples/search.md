@@ -30,9 +30,19 @@ uv run courtlistener-cli search advanced --judge "Sotomayor" --date-from 2020-01
 uv run courtlistener-cli search advanced --court ca9 --date-from 2023-01-01 --limit 50 --format xlsx
 ```
 
+Filter by court:
+
+```bash
+# Pass the court_id slug from your exported data (e.g. dcd, ca9, nysd, txnd)
+uv run courtlistener-cli search query --q "1:16-cv-00745" --type r --court dcd --format csv
+uv run courtlistener-cli search query --q '"serial number" "firearm"' --type d --court ca9 --limit 50 --format xlsx
+uv run courtlistener-cli search query --q '"habeas corpus"' --type rd --court nysd --limit 100 --format csv
+```
+
 Count before exporting:
 
 ```bash
 uv run courtlistener-cli search count --q '"qualified immunity"' --type r
+uv run courtlistener-cli search count --q '"qualified immunity"' --type r --court ca9
 uv run courtlistener-cli search count --q '"patent infringement"' --type o
 ```
