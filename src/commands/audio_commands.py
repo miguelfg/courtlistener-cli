@@ -32,7 +32,7 @@ def list_audio(limit, max_pages, offset, court, year, output_format, output_path
     
     params = {'page_size': 100 if limit == 0 else max(limit, 1)}
     if court:
-        params['court'] = court
+        params['docket__court'] = court
     if year:
         params['date_argued_gte'] = f'{year}-01-01'
         params['date_argued_lte'] = f'{year}-12-31'
@@ -84,7 +84,7 @@ def count_audio(court, year):
 
     params = {'page_size': 1}
     if court:
-        params['court'] = court
+        params['docket__court'] = court
     if year:
         params['date_argued_gte'] = f'{year}-01-01'
         params['date_argued_lte'] = f'{year}-12-31'

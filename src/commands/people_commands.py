@@ -31,8 +31,8 @@ def list_people(limit, max_pages, offset, name, output_format, output_path):
     
     params = {'page_size': 100 if limit == 0 else max(limit, 1)}
     if name:
-        params['name'] = name
-    
+        params['name_last'] = name
+
     try:
         output_data = paginate_endpoint(
             fetch_page=lambda request_params: client.get('/people/', params=request_params),
@@ -79,7 +79,7 @@ def count_people(name):
 
     params = {'page_size': 1}
     if name:
-        params['name'] = name
+        params['name_last'] = name
 
     try:
         result = client.get('/people/', params=params)
