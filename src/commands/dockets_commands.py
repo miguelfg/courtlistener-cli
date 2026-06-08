@@ -122,8 +122,7 @@ def list_dockets(input_file, column, limit, max_pages, offset, court, docket_num
                             )
                     else:
                         params = {
-                            'limit': 100 if limit == 0 else max(limit, 1),
-                            'offset': offset,
+                            'page_size': 100 if limit == 0 else max(limit, 1),
                             'docket_number': query_value
                         }
                         if court:
@@ -173,7 +172,7 @@ def list_dockets(input_file, column, limit, max_pages, offset, court, docket_num
                 click.echo(f"✗ Errors: {errors}")
             click.echo(f"✓ Saved to {filepath}")
         else:
-            params = {'limit': 100 if limit == 0 else max(limit, 1), 'offset': offset}
+            params = {'page_size': 100 if limit == 0 else max(limit, 1)}
             if court:
                 params['court'] = court
             if docket_number:
@@ -312,7 +311,7 @@ def count_dockets(court, case_name):
     """Return total matching dockets count"""
     client = CourtListenerClient()
 
-    params = {'limit': 1}
+    params = {'page_size': 1}
     if court:
         params['court'] = court
     if case_name:
