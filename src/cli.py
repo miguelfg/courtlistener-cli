@@ -22,13 +22,16 @@ from .commands.tags_commands import tags
 
 @click.group()
 @click.version_option(version='1.0.0')
-def main():
+@click.option('--no-cache', is_flag=True, help='Disable local caching for this request')
+@click.pass_context
+def main(ctx, no_cache):
     """CourtListener REST API Python CLI Client
 
     Access federal and state case law, PACER data, RECAP Archive,
     oral arguments, judge information, and financial disclosures.
     """
-    pass
+    ctx.ensure_object(dict)
+    ctx.obj['no_cache'] = no_cache
 
 
 # Existing command groups

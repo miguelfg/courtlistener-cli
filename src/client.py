@@ -3,6 +3,7 @@
 import time
 import logging
 import httpx
+import click
 from typing import Any, Dict, Optional
 from .config import config
 
@@ -28,10 +29,18 @@ class DailyQuotaExceeded(Exception):
 class CourtListenerClient:
     """HTTP client wrapper for CourtListener API"""
 
-    def __init__(self, api_token: Optional[str] = None, base_url: Optional[str] = None):
+    def __init__(self, api_token: Optional[str] = None, base_url: Optional[str] = None, no_cache: Optional[bool] = None):
         self.api_token = api_token if api_token is not None else config.api_token
         self.base_url = base_url or config.base_url
         self.timeout = config.timeout
+        
+        # Detect no_cache from click context if not provided
+        if no_cache is None:
+            ctx = click.get_current_context(silent=True)
+            if ctx and ctx.obj:
+                no_cache = ctx.obj.get('no_cache', False)
+        
+        self.no_cache = no_cache or False
         self.client = None
 
     def _get_headers(self) -> Dict[str, str]:
@@ -42,6 +51,8 @@ class CourtListenerClient:
         }
         if self.api_token:
             headers['Authorization'] = f'Token {self.api_token}'
+        if self.no_cache:
+            headers['Cache-Control'] = 'no-cache'
         return headers
 
     def request(self, method: str, endpoint: str, **kwargs) -> Dict[str, Any]:
