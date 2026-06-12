@@ -1,13 +1,27 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Demo script for courtlistener-cli
+# Demo script for courtlistener-cli.
+# It clones into a disposable temp workspace so the source repo stays clean.
 export TERM=xterm-256color
 export NO_COLOR=1
 export PAGER=cat
 export GIT_PAGER=cat
 export COLUMNS=96
 export LINES=28
+
+SOURCE_REPO="${SOURCE_REPO:-https://github.com/miguelfg/courtlistener-cli}"
+DEMO_WORKDIR="${DEMO_WORKDIR:-$(mktemp -d /tmp/courtlistener-cli-demo.XXXXXX)}"
+PROJECT_DIR="$DEMO_WORKDIR/courtlistener-cli"
+ORIGINAL_DIR="$(pwd)"
+
+cleanup() {
+  # Keep temp workspace for debugging only when explicitly requested.
+  if [ "${KEEP_DEMO_WORKDIR:-0}" != "1" ]; then
+    rm -rf "$DEMO_WORKDIR"
+  fi
+}
+trap cleanup EXIT
 
 run() {
   local cmd="$1"
@@ -24,11 +38,11 @@ slide() {
   sleep 2.0
 }
 
-# Load local API credentials without printing secrets.
-if [ -f .env ]; then
+# Load local API credentials from the source checkout without printing secrets.
+if [ -f "$ORIGINAL_DIR/.env" ]; then
   set -a
   # shellcheck disable=SC1091
-  source .env
+  source "$ORIGINAL_DIR/.env"
   set +a
 fi
 
@@ -37,8 +51,10 @@ deactivate 2>/dev/null || true
 unset VIRTUAL_ENV
 
 # 1. Installation
-slide "Installing CourtListener CLI" "Sync dependencies, install the editable CLI package, then activate the project virtualenv."
-run "git pull --ff-only origin main"
+slide "Installing CourtListener CLI" "Clone into a temporary workspace, sync dependencies, install editable CLI, and activate the project virtualenv."
+run "mkdir -p '$DEMO_WORKDIR'"
+run "git clone '$SOURCE_REPO' '$PROJECT_DIR'"
+cd "$PROJECT_DIR"
 run "uv sync"
 run "uv pip install -e ."
 source .venv/bin/activate
