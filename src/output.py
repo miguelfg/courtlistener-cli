@@ -2,9 +2,22 @@
 
 import json
 import csv
+import click
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 from datetime import datetime
+
+
+def print_to_screen(data: Any):
+    """Print results to screen if --screen flag is set"""
+    ctx = click.get_current_context(silent=True)
+    if ctx and ctx.obj and ctx.obj.get('screen'):
+        # If it's a list of results, we might want to wrap it in a dict for consistency
+        if isinstance(data, list):
+            output = {"results": data, "count": len(data)}
+        else:
+            output = data
+        click.echo(json.dumps(output, indent=2))
 
 
 def flatten_dict(
@@ -36,6 +49,7 @@ def flatten_dict(
 
 def save_json(data: Any, output_path: Path, include_timestamp: bool = False, filename_stem: str = "results") -> Path:
     """Save data as JSON"""
+    print_to_screen(data)
     if include_timestamp:
         filename = f"{filename_stem}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
     else:
@@ -56,6 +70,7 @@ def save_csv(
     concat_list_fields_char: Optional[str] = ';',
 ) -> Path:
     """Save data as CSV"""
+    print_to_screen(data)
     if include_timestamp:
         filename = f"{filename_stem}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
     else:
@@ -83,6 +98,7 @@ def save_xlsx(
     concat_list_fields_char: Optional[str] = ';',
 ) -> Path:
     """Save data as XLSX"""
+    print_to_screen(data)
     try:
         from openpyxl import Workbook
         from openpyxl.styles import Font, PatternFill, Alignment

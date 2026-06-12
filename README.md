@@ -91,6 +91,15 @@ The `dockets download-docs` command can fetch a full doc list in one request ins
 
 Without this, `download-docs` falls back to API pagination (slower, more rate-limited). Sessions expire periodically — refresh the value when you start seeing the fallback again.
 
+### Global Options
+
+| Flag | Description |
+|---|---|
+| `--no-cache` | Disable local caching and force fresh API requests |
+| `--screen` | Print results directly to the console in JSON format |
+| `--version` | Show tool version |
+| `--help` | Show help message |
+
 ### Pagination Behavior (all list commands)
 
 | Flag combination | Behavior |
