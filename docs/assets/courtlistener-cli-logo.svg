@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">courtlistener-cli gavel prompt icon</title>
+  <desc id="desc">Square icon combining a compact legal gavel with a terminal prompt marker for courtlistener-cli.</desc>
+
+  <rect width="512" height="512" rx="96" fill="#0B1320"/>
+  <rect x="42" y="42" width="428" height="428" rx="72" fill="#111827" stroke="#2563EB" stroke-width="12"/>
+
+  <!-- prompt marker -->
+  <path d="M92 238 L160 292 L92 346" fill="none" stroke="#60A5FA" stroke-width="36" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- compact gavel aligned with prompt marker -->
+  <g transform="translate(184 168) rotate(-18 118 88)">
+    <rect x="116" y="102" width="150" height="32" rx="16" fill="#92400E"/>
+    <rect x="132" y="112" width="102" height="8" rx="4" fill="#D97706" opacity="0.7"/>
+    <rect x="20" y="54" width="122" height="80" rx="18" fill="#92400E"/>
+    <rect x="8" y="38" width="146" height="28" rx="14" fill="#D97706"/>
+    <rect x="8" y="124" width="146" height="28" rx="14" fill="#78350F"/>
+    <rect x="42" y="28" width="82" height="22" rx="11" fill="#F59E0B" opacity="0.95"/>
+    <rect x="42" y="142" width="82" height="22" rx="11" fill="#5F2B0A"/>
+    <rect x="48" y="78" width="70" height="11" fill="#F59E0B" opacity="0.55"/>
+  </g>
+</svg>
