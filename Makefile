@@ -45,10 +45,10 @@ install-docs:
 	uv pip install -e ".[docs]"
 
 docs-build:
-	uv run --extra docs mkdocs build
+	mkdocs build
 
 docs-serve:
-	uv run --extra docs mkdocs serve
+	mkdocs serve
 
 lint:
 	-ruff check src/ tests/ --fix
@@ -61,47 +61,47 @@ test:
 	python3 -m pytest tests/ -v --tb=short
 
 run:
-	uv run $(PROJECT_NAME) --help
+	$(PROJECT_NAME) --help
 
 opinions-list:
-	uv run $(PROJECT_NAME) opinions list --limit 10 --format json
+	$(PROJECT_NAME) opinions list --limit 10 --format json
 
 search-firearm-serial:
-	uv run $(PROJECT_NAME) search query --q '"serial number" "firearm"' --limit 0 --max-pages 0 --format xlsx --filename "firearm-with-serials"
+	$(PROJECT_NAME) search query --q '"serial number" "firearm"' --limit 0 --max-pages 0 --format xlsx --filename "firearm-with-serials"
 
 search-firearm-serial-resume:
-	uv run $(PROJECT_NAME) search query --q '"serial number" "firearm"' --offset $(if $(OFFSET),$(OFFSET),0) --limit 0 --max-pages 0 --format xlsx --filename "firearm-with-serials"
+	$(PROJECT_NAME) search query --q '"serial number" "firearm"' --offset $(if $(OFFSET),$(OFFSET),0) --limit 0 --max-pages 0 --format xlsx --filename "firearm-with-serials"
 
 search-firearm-serial-continue:
 	@if [ -z "$(OFFSET)" ]; then echo "Usage: make search-firearm-serial-continue OFFSET=<number>"; exit 1; fi
-	uv run $(PROJECT_NAME) search query --q '"serial number" "firearm"' --offset $(OFFSET) --limit 0 --max-pages 0 --format xlsx --filename "firearm-with-serials_part_$(OFFSET)"
+	$(PROJECT_NAME) search query --q '"serial number" "firearm"' --offset $(OFFSET) --limit 0 --max-pages 0 --format xlsx --filename "firearm-with-serials_part_$(OFFSET)"
 
 count-firearm-serial:
-	uv run $(PROJECT_NAME) search count --q '"serial number" "firearm"' --type r
+	$(PROJECT_NAME) search count --q '"serial number" "firearm"' --type r
 
 opinions-get:
-	uv run $(PROJECT_NAME) opinions get 123456
+	$(PROJECT_NAME) opinions get 123456
 
 docket-69717740:
-	uv run $(PROJECT_NAME) search query --q "docket_id:69717740" --type r --limit 0 --max-pages 0 --format xlsx --filename docket_69717740 --slim
+	$(PROJECT_NAME) search query --q "docket_id:69717740" --type r --limit 0 --max-pages 0 --format xlsx --filename docket_69717740 --slim
 
 search-slim-example:
-	uv run $(PROJECT_NAME) search query --q '"serial number" "firearm"' --limit 25 --format xlsx --slim
+	$(PROJECT_NAME) search query --q '"serial number" "firearm"' --limit 25 --format xlsx --slim
 
 dockets-list:
-	uv run $(PROJECT_NAME) dockets list data/dockets.xlsx --column docketNumber --limit 50 --max-pages 5 --format json
+	$(PROJECT_NAME) dockets list data/dockets.xlsx --column docketNumber --limit 50 --max-pages 5 --format json
 
 docket-4134326-download-docs:
-	uv run $(PROJECT_NAME) dockets download-docs 4134326 --output ./output
+	$(PROJECT_NAME) dockets download-docs 4134326 --output ./output
 
 docket-4134326-parties:
-	uv run $(PROJECT_NAME) dockets parties 4134326 --output ./output
+	$(PROJECT_NAME) dockets parties 4134326 --output ./output
 
 batch-example:
 	@echo "Creating sample batch file..."
 	@mkdir -p data
 	@echo "method,endpoint,limit\nGET,/opinions/,20" > data/sample-batch.csv
-	uv run $(PROJECT_NAME) batch --input-file data/sample-batch.csv --format json
+	$(PROJECT_NAME) batch --input-file data/sample-batch.csv --format json
 
 clean:
 	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null
