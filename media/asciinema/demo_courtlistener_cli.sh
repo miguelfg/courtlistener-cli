@@ -9,53 +9,65 @@ export GIT_PAGER=cat
 export COLUMNS=96
 export LINES=28
 
-# Suppress uv virtual environment warnings
-export UV_PROJECT_ENVIRONMENT=.venv
-
 run() {
   local cmd="$1"
   printf '\n\033[1;36m$ %s\033[0m\n' "$cmd"
   sleep 0.8
-  # Execute in a subshell with a clean environment
-  bash -lc "export COURTLISTENER_API_TOKEN=$(grep COURTLISTENER_API_TOKEN .env | cut -d '=' -f2) && $cmd"
+  bash -lc "$cmd"
   sleep 1.2
 }
 
+slide() {
+  clear
+  printf '\033[1;32mSlide: %s\033[0m\n' "$1"
+  printf '%s\n' "$2"
+  sleep 2.0
+}
+
+# Load local API credentials without printing secrets.
+if [ -f .env ]; then
+  set -a
+  # shellcheck disable=SC1091
+  source .env
+  set +a
+fi
+
+# Avoid inheriting the Hermes runtime venv. Use this project's .venv only.
+deactivate 2>/dev/null || true
+unset VIRTUAL_ENV
+
 # 1. Installation
-clear
-printf '\033[1;32mSlide: Installing CourtListener CLI\033[0m\n'
-sleep 2.0
-run "git clone https://github.com/miguelfg/courtlistener-cli"
-cd courtlistener-cli
-# Use --active to use the project's own venv without conflicting with Hermes' venv
-run "uv sync --active"
-run "uv pip install -e . --active"
+slide "Installing CourtListener CLI" "Sync dependencies, install the editable CLI package, then activate the project virtualenv."
+run "git pull --ff-only origin main"
+run "uv sync"
+run "uv pip install -e ."
 source .venv/bin/activate
 
 # 2. CLI Surface & Data Retrieval
-clear
-printf '\033[1;32mSlide: Version Check\033[0m\n'
+slide "Version Check" "Verify the direct command is available after activation."
 run "courtlistener-cli --version"
 
-clear
-printf '\033[1;32mSlide: Querying Courts Data\033[0m\n'
+slide "Querying Courts Data" "Default flow: fetch a small courts sample using the standard cache/output behavior."
 run "courtlistener-cli courts list --limit 3"
 
-clear
-printf '\033[1;32mSlide: Retrieving Attorney Records\033[0m\n'
-run "courtlistener-cli attorneys list --limit 3"
+slide "Printing Results to Screen" "Use --screen to print JSON results directly in the terminal, useful for inspection and demos."
+run "courtlistener-cli --screen courts list --limit 3"
 
-clear
-printf '\033[1;32mSlide: Accessing Financial Disclosures\033[0m\n'
+slide "Bypassing Cache for Fresh API Data" "Use --no-cache together with --screen to force a fresh API request and display the returned data."
+run "courtlistener-cli --no-cache --screen courts list --limit 3"
+
+slide "Retrieving Attorney Records" "Compare the regular output flow with direct screen output for PACER attorney records."
+run "courtlistener-cli attorneys list --limit 3"
+run "courtlistener-cli --screen attorneys list --limit 3"
+
+slide "Accessing Financial Disclosures" "Retrieve a small sample of federal judicial financial disclosure records."
 run "courtlistener-cli financial list --limit 3"
 
-clear
-printf '\033[1;32mSlide: Browsing Data Tags\033[0m\n'
+slide "Browsing Data Tags" "List user-created tags linked to dockets."
 run "courtlistener-cli tags list --limit 5"
 
 # 3. Documentation & Modules
-clear
-printf '\033[1;32mSlide: Documentation & Modules\033[0m\n'
+slide "Documentation & Modules" "Show the command modules and the project documentation entry point."
 run "ls -F src/commands/"
 run "cat README.md | head -n 15"
 
