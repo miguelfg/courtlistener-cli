@@ -3,14 +3,14 @@
 List positions:
 
 ```bash
-uv run courtlistener-cli positions list --limit 20
-uv run courtlistener-cli positions list --person 1234 --limit 50
-uv run courtlistener-cli positions list --court scotus --order-by date_start --format xlsx --output ./output
-uv run courtlistener-cli positions list --person 1234 --court scotus --format json
+courtlistener-cli positions list --limit 20
+courtlistener-cli positions list --person 1234 --limit 50
+courtlistener-cli positions list --court scotus --order-by date_start --format xlsx --output ./output
+courtlistener-cli positions list --person 1234 --court scotus --format json
 ```
 
 Get one position:
 
 ```bash
-uv run courtlistener-cli positions get 98765
+courtlistener-cli positions get 98765
 ```

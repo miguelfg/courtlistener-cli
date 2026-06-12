@@ -94,8 +94,8 @@ pip install -e .
 ### Verify Installation
 
 ```bash
-uv run courtlistener-cli --version
-uv run courtlistener-cli --help
+courtlistener-cli --version
+courtlistener-cli --help
 ```
 
 ### Validation Requirements
@@ -159,7 +159,7 @@ Authorization: Token <your-token-here>
 Example:
 ```bash
 export COURTLISTENER_API_TOKEN=abc123...
-uv run courtlistener-cli dockets list --limit 10
+courtlistener-cli dockets list --limit 10
 ```
 
 The token is obtained by creating a CourtListener account and visiting the API settings page.
@@ -683,7 +683,7 @@ The `batch` command group reads a column from a CSV or XLSX file and executes a 
 ### Single Request — List SCOTUS Dockets
 
 ```bash
-uv run courtlistener-cli dockets list \
+courtlistener-cli dockets list \
   --court scotus \
   --limit 10 \
   --format xlsx \
@@ -693,7 +693,7 @@ uv run courtlistener-cli dockets list \
 ### Search for Case Law
 
 ```bash
-uv run courtlistener-cli search query \
+courtlistener-cli search query \
   --q "gun control" \
   --type o \
   --limit 50 \
@@ -703,14 +703,14 @@ uv run courtlistener-cli search query \
 ### Citation Lookup
 
 ```bash
-uv run courtlistener-cli citation-lookup \
+courtlistener-cli citation-lookup \
   --volume 576 --reporter "U.S." --page 644
 ```
 
 ### Batch Docket Lookup from Spreadsheet
 
 ```bash
-uv run courtlistener-cli batch dockets \
+courtlistener-cli batch dockets \
   --input-file dockets.xlsx \
   --column docket_number \
   --court dcd \
@@ -922,13 +922,13 @@ make test              # pytest -v --tb=short
 make run               # display CLI help
 
 # Smoke-test targets (low-volume live validation)
-make dockets-list      # uv run courtlistener-cli dockets list --limit 10
-make courts-list       # uv run courtlistener-cli courts list --limit 10
-make opinions-list     # uv run courtlistener-cli opinions list --limit 10
-make audio-list        # uv run courtlistener-cli audio list --limit 10
-make people-list       # uv run courtlistener-cli people list --limit 10
-make search-sample     # uv run courtlistener-cli search query --q "test" --limit 5
-make alerts-list       # uv run courtlistener-cli alerts list
+make dockets-list      # courtlistener-cli dockets list --limit 10
+make courts-list       # courtlistener-cli courts list --limit 10
+make opinions-list     # courtlistener-cli opinions list --limit 10
+make audio-list        # courtlistener-cli audio list --limit 10
+make people-list       # courtlistener-cli people list --limit 10
+make search-sample     # courtlistener-cli search query --q "test" --limit 5
+make alerts-list       # courtlistener-cli alerts list
 ```
 
 ---

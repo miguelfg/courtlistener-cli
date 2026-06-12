@@ -3,9 +3,9 @@
 Process a CSV batch file:
 
 ```bash
-uv run courtlistener-cli batch process --input-file data/sample-batch.csv --format json
-uv run courtlistener-cli batch process --input-file data/sample-batch.csv --format csv --output ./output
-uv run courtlistener-cli batch process --input-file data/sample-batch.csv --format xlsx --output ./output --limit 25 --verbose
+courtlistener-cli batch process --input-file data/sample-batch.csv --format json
+courtlistener-cli batch process --input-file data/sample-batch.csv --format csv --output ./output
+courtlistener-cli batch process --input-file data/sample-batch.csv --format xlsx --output ./output --limit 25 --verbose
 ```
 
 Example `data/sample-batch.csv`:

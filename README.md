@@ -43,24 +43,24 @@ Get your token at [courtlistener.com/profile/api/](https://www.courtlistener.com
 ### 2. Verify
 
 ```bash
-uv run courtlistener-cli --version
-uv run courtlistener-cli --help
+courtlistener-cli --version
+courtlistener-cli --help
 ```
 
 ### 3. First queries
 
 ```bash
 # 10 most recent SCOTUS opinions
-uv run courtlistener-cli opinions list --limit 10
+courtlistener-cli opinions list --limit 10
 
 # Full-text search for case law
-uv run courtlistener-cli search query --q '"gun control"' --type o --limit 25
+courtlistener-cli search query --q '"gun control"' --type o --limit 25
 
 # List SCOTUS dockets, save as XLSX
-uv run courtlistener-cli dockets list --court scotus --limit 50 --format xlsx
+courtlistener-cli dockets list --court scotus --limit 50 --format xlsx
 
 # Verify a citation
-uv run courtlistener-cli citation-lookup citation --volume 576 --reporter "U.S." --page 644
+courtlistener-cli citation-lookup citation --volume 576 --reporter "U.S." --page 644
 ```
 
 ---
@@ -111,10 +111,10 @@ Progress is printed per page: `→ Page 3: +20 results (accumulated 60/100)`
 Case law decisions.
 
 ```bash
-uv run courtlistener-cli opinions list --limit 20
-uv run courtlistener-cli opinions list --format xlsx --output ./results/
-uv run courtlistener-cli opinions get 106359
-uv run courtlistener-cli opinions count --search "miranda"
+courtlistener-cli opinions list --limit 20
+courtlistener-cli opinions list --format xlsx --output ./results/
+courtlistener-cli opinions get 106359
+courtlistener-cli opinions count --search "miranda"
 ```
 
 | Sub-command | Description |
@@ -130,11 +130,11 @@ uv run courtlistener-cli opinions count --search "miranda"
 Opinion clusters — groups of decisions (majority, dissent, concurrence) for a single case.
 
 ```bash
-uv run courtlistener-cli clusters list --court scotus --limit 10
-uv run courtlistener-cli clusters list --docket-number 23A994 --court scotus
-uv run courtlistener-cli clusters list --date-filed-after 2020-01-01 --date-filed-before 2024-12-31
-uv run courtlistener-cli clusters get 2812209
-uv run courtlistener-cli clusters count --court scotus
+courtlistener-cli clusters list --court scotus --limit 10
+courtlistener-cli clusters list --docket-number 23A994 --court scotus
+courtlistener-cli clusters list --date-filed-after 2020-01-01 --date-filed-before 2024-12-31
+courtlistener-cli clusters get 2812209
+courtlistener-cli clusters count --court scotus
 ```
 
 | Option | Description |
@@ -158,41 +158,41 @@ Common one-off exports:
 
 ```bash
 # First 50 dockets in a court, written to ./output as JSON
-uv run courtlistener-cli dockets list --court dcd --limit 50
+courtlistener-cli dockets list --court dcd --limit 50
 
 # Find a known docket number. Docket numbers are not globally unique, so include --court when you know it.
-uv run courtlistener-cli dockets list --docket-number "1:16-cv-00745" --court dcd
+courtlistener-cli dockets list --docket-number "1:16-cv-00745" --court dcd
 
 # Search by case name within a court
-uv run courtlistener-cli dockets list --court dcd --case-name "National Veterans" --limit 25
+courtlistener-cli dockets list --court dcd --case-name "National Veterans" --limit 25
 
 # Export a spreadsheet instead of JSON
-uv run courtlistener-cli dockets list --court scotus --limit 100 --format xlsx
+courtlistener-cli dockets list --court scotus --limit 100 --format xlsx
 
 # Send the generated file to a different output directory
-uv run courtlistener-cli dockets list --court ca9 --limit 100 --format csv --output ./output/ca9
+courtlistener-cli dockets list --court ca9 --limit 100 --format csv --output ./output/ca9
 
 # Resume from an API offset when splitting a large export into chunks
-uv run courtlistener-cli dockets list --court dcd --offset 500 --limit 500 --format xlsx
+courtlistener-cli dockets list --court dcd --offset 500 --limit 500 --format xlsx
 
 # Export every matching docket. This can be slow and may consume quota.
-uv run courtlistener-cli dockets list --court scotus --limit 0 --max-pages 0 --format xlsx
+courtlistener-cli dockets list --court scotus --limit 0 --max-pages 0 --format xlsx
 
-uv run courtlistener-cli dockets get 4214664
-uv run courtlistener-cli dockets count --court scotus
+courtlistener-cli dockets get 4214664
+courtlistener-cli dockets count --court scotus
 ```
 
 **Batch mode** — supply a CSV/XLSX column of docket numbers or docket IDs:
 
 ```bash
 # Look up each docket number in the spreadsheet column
-uv run courtlistener-cli dockets list data/dockets.xlsx --column docketNumber --limit 50
+courtlistener-cli dockets list data/dockets.xlsx --column docketNumber --limit 50
 
 # Limit each docket-number lookup to a specific court
-uv run courtlistener-cli dockets list data/dockets.csv --column docketNumber --court dcd --limit 0 --max-pages 0 --format xlsx
+courtlistener-cli dockets list data/dockets.csv --column docketNumber --court dcd --limit 0 --max-pages 0 --format xlsx
 
 # If the column is named id or docket_id, values are fetched directly by docket ID
-uv run courtlistener-cli dockets list data/dockets.xlsx --column docket_id --format csv
+courtlistener-cli dockets list data/dockets.xlsx --column docket_id --format csv
 ```
 
 Batch results include a `_query_value` column tracing which input row triggered each result.
@@ -216,9 +216,9 @@ Batch results include a `_query_value` column tracing which input row triggered 
 Rows on a PACER docket. Each entry contains one or more RECAP documents.
 
 ```bash
-uv run courtlistener-cli docket-entries list --docket 4214664 --limit 100
-uv run courtlistener-cli docket-entries list --docket 4214664 --limit 0 --max-pages 0 --format xlsx
-uv run courtlistener-cli docket-entries get 987654
+courtlistener-cli docket-entries list --docket 4214664 --limit 100
+courtlistener-cli docket-entries list --docket 4214664 --limit 0 --max-pages 0 --format xlsx
+courtlistener-cli docket-entries get 987654
 ```
 
 `--docket` is required for `list` — filtering to a docket is the practical use case.
@@ -231,13 +231,13 @@ Individual PDFs and attachments within PACER docket entries.
 
 ```bash
 # List available documents for a docket entry
-uv run courtlistener-cli recap-documents list --docket-entry 123456
+courtlistener-cli recap-documents list --docket-entry 123456
 
 # Only documents we have on file
-uv run courtlistener-cli recap-documents list --docket-entry 123456 --is-available true
+courtlistener-cli recap-documents list --docket-entry 123456 --is-available true
 
 # Check if specific PACER document IDs are in RECAP
-uv run courtlistener-cli recap-documents query \
+courtlistener-cli recap-documents query \
   --court dcd \
   --pacer-doc-id 04505578698,04505578717
 ```
@@ -253,9 +253,9 @@ uv run courtlistener-cli recap-documents query \
 PACER case parties (plaintiffs, defendants, etc.) with nested attorney information.
 
 ```bash
-uv run courtlistener-cli parties list --docket 4214664
-uv run courtlistener-cli parties list --docket 4214664 --filter-nested-results
-uv run courtlistener-cli parties list --docket 4214664 --format xlsx
+courtlistener-cli parties list --docket 4214664
+courtlistener-cli parties list --docket 4214664 --filter-nested-results
+courtlistener-cli parties list --docket 4214664 --format xlsx
 ```
 
 | Option | Description |
@@ -270,9 +270,9 @@ uv run courtlistener-cli parties list --docket 4214664 --format xlsx
 PACER case attorneys with nested party representations.
 
 ```bash
-uv run courtlistener-cli attorneys list --docket 4214664
-uv run courtlistener-cli attorneys list --docket 4214664 --filter-nested-results
-uv run courtlistener-cli attorneys get 9247906
+courtlistener-cli attorneys list --docket 4214664
+courtlistener-cli attorneys list --docket 4214664 --filter-nested-results
+courtlistener-cli attorneys get 9247906
 ```
 
 Same `--filter-nested-results` semantics as `parties`.
@@ -284,11 +284,11 @@ Same `--filter-nested-results` semantics as `parties`.
 Judges, appointers, and other persons in the judiciary.
 
 ```bash
-uv run courtlistener-cli people list --limit 20
-uv run courtlistener-cli people list --name Smith --format xlsx
-uv run courtlistener-cli people list --educations-school-name Rochester
-uv run courtlistener-cli people get 1213
-uv run courtlistener-cli people count --name Ginsburg
+courtlistener-cli people list --limit 20
+courtlistener-cli people list --name Smith --format xlsx
+courtlistener-cli people list --educations-school-name Rochester
+courtlistener-cli people get 1213
+courtlistener-cli people count --name Ginsburg
 ```
 
 | Option | Description |
@@ -306,9 +306,9 @@ uv run courtlistener-cli people count --name Ginsburg
 Judicial positions held by people (judge, president, private practice, etc.).
 
 ```bash
-uv run courtlistener-cli positions list --person 1213
-uv run courtlistener-cli positions list --court scotus --limit 50
-uv run courtlistener-cli positions get 42
+courtlistener-cli positions list --person 1213
+courtlistener-cli positions list --court scotus --limit 50
+courtlistener-cli positions get 42
 ```
 
 ---
@@ -318,10 +318,10 @@ uv run courtlistener-cli positions get 42
 Court metadata. Changes rarely — safe to cache locally.
 
 ```bash
-uv run courtlistener-cli courts list --limit 0 --max-pages 0 --format xlsx
-uv run courtlistener-cli courts list --jurisdiction FD   # federal district courts
-uv run courtlistener-cli courts get scotus
-uv run courtlistener-cli courts count --jurisdiction FD
+courtlistener-cli courts list --limit 0 --max-pages 0 --format xlsx
+courtlistener-cli courts list --jurisdiction FD   # federal district courts
+courtlistener-cli courts get scotus
+courtlistener-cli courts count --jurisdiction FD
 ```
 
 ---
@@ -331,10 +331,10 @@ uv run courtlistener-cli courts count --jurisdiction FD
 Oral argument recordings — the largest collection on the internet, converted to optimized MP3.
 
 ```bash
-uv run courtlistener-cli audio list --court scotus --limit 20
-uv run courtlistener-cli audio list --date-argued-after 2023-01-01 --format xlsx
-uv run courtlistener-cli audio get 98765
-uv run courtlistener-cli audio count --court ca9 --year 2022
+courtlistener-cli audio list --court scotus --limit 20
+courtlistener-cli audio list --date-argued-after 2023-01-01 --format xlsx
+courtlistener-cli audio get 98765
+courtlistener-cli audio count --court ca9 --year 2022
 ```
 
 Fields of note: `local_path_mp3` (CourtListener-enhanced MP3), `download_url` (original court URL, may be taken down), `duration` (seconds, estimated).
@@ -347,22 +347,22 @@ Full-text search across the entire CourtListener corpus — powered by a search 
 
 ```bash
 # Case law (default)
-uv run courtlistener-cli search query --q '"miranda rights"' --limit 50
+courtlistener-cli search query --q '"miranda rights"' --limit 50
 
 # PACER dockets
-uv run courtlistener-cli search query --q "apple inc" --type d --limit 20
+courtlistener-cli search query --q "apple inc" --type d --limit 20
 
 # PACER filing documents
-uv run courtlistener-cli search query --q '"serial number" firearm' --type r --format xlsx
+courtlistener-cli search query --q '"serial number" firearm' --type r --format xlsx
 
 # Judges
-uv run courtlistener-cli search query --q "Ginsburg" --type p
+courtlistener-cli search query --q "Ginsburg" --type p
 
 # Oral arguments
-uv run courtlistener-cli search query --q "commerce clause" --type oa
+courtlistener-cli search query --q "commerce clause" --type oa
 
 # Count only (no data export)
-uv run courtlistener-cli search count --q '"gun control"' --type o
+courtlistener-cli search count --q '"gun control"' --type o
 ```
 
 | `--type` | Result set |
@@ -385,24 +385,24 @@ Financial disclosure records for federal judges under the Ethics in Government A
 
 ```bash
 # Main disclosures for a judge
-uv run courtlistener-cli financial list --person 1213 --format xlsx
+courtlistener-cli financial list --person 1213 --format xlsx
 
 # Single disclosure
-uv run courtlistener-cli financial get 34187
+courtlistener-cli financial get 34187
 
 # Investment holdings (with value codes)
-uv run courtlistener-cli financial investments --person 1213
-uv run courtlistener-cli financial investments --gross-value-code P4   # investments >$50M
-uv run courtlistener-cli financial investments --redacted true          # rows with redactions
+courtlistener-cli financial investments --person 1213
+courtlistener-cli financial investments --gross-value-code P4   # investments >$50M
+courtlistener-cli financial investments --redacted true          # rows with redactions
 
 # Gifts, debts, agreements, income
-uv run courtlistener-cli financial gifts --disclosure 34187
-uv run courtlistener-cli financial debts --disclosure 34187
-uv run courtlistener-cli financial agreements --disclosure 34187
-uv run courtlistener-cli financial non-investment-incomes --disclosure 34187
+courtlistener-cli financial gifts --disclosure 34187
+courtlistener-cli financial debts --disclosure 34187
+courtlistener-cli financial agreements --disclosure 34187
+courtlistener-cli financial non-investment-incomes --disclosure 34187
 
 # Outside positions held (officer, director, trustee)
-uv run courtlistener-cli financial disclosure-positions --disclosure 34187
+courtlistener-cli financial disclosure-positions --disclosure 34187
 ```
 
 | Sub-command | API path | Description |
@@ -425,26 +425,26 @@ Search alerts — get email or webhook notifications when new matching results a
 
 ```bash
 # List your alerts
-uv run courtlistener-cli alerts list
+courtlistener-cli alerts list
 
 # Create a real-time alert for new Apple Inc. opinions
-uv run courtlistener-cli alerts create \
+courtlistener-cli alerts create \
   --name "Apple Inc opinions" \
   --query 'q=%22Apple%20Inc%22&type=o' \
   --rate rt
 
 # Create a daily RECAP alert for new filings in Apple cases
-uv run courtlistener-cli alerts create \
+courtlistener-cli alerts create \
   --name "Apple RECAP" \
   --query 'q=%22Apple%22&type=r' \
   --rate dly \
   --alert-type r
 
 # Update frequency
-uv run courtlistener-cli alerts update --id 4839 --rate wly
+courtlistener-cli alerts update --id 4839 --rate wly
 
 # Delete
-uv run courtlistener-cli alerts delete --id 4839 --confirm
+courtlistener-cli alerts delete --id 4839 --confirm
 ```
 
 | `--rate` | Frequency |
@@ -464,13 +464,13 @@ Subscribe to updates for specific dockets. Notified immediately when new informa
 
 ```bash
 # Subscribe to a docket
-uv run courtlistener-cli docket-alerts create --docket 4214664
+courtlistener-cli docket-alerts create --docket 4214664
 
 # List subscriptions
-uv run courtlistener-cli docket-alerts list
+courtlistener-cli docket-alerts list
 
 # Unsubscribe
-uv run courtlistener-cli docket-alerts delete --id 133013 --confirm
+courtlistener-cli docket-alerts delete --id 133013 --confirm
 ```
 
 ---
@@ -481,11 +481,11 @@ Verify legal citations against CourtListener's database of 18M+ citations. Usefu
 
 ```bash
 # Scan a block of text for all citations
-uv run courtlistener-cli citation-lookup text \
+courtlistener-cli citation-lookup text \
   --text "Obergefell v. Hodges (576 U.S. 644) established the right to marriage."
 
 # Look up a specific citation
-uv run courtlistener-cli citation-lookup citation \
+courtlistener-cli citation-lookup citation \
   --volume 576 --reporter "U.S." --page 644
 ```
 
@@ -502,8 +502,8 @@ Does not look up statutes, `id.`, or `supra` citations.
 User-created tags linked to dockets.
 
 ```bash
-uv run courtlistener-cli tags list
-uv run courtlistener-cli tags get 1316
+courtlistener-cli tags list
+courtlistener-cli tags get 1316
 ```
 
 ---
@@ -513,8 +513,8 @@ uv run courtlistener-cli tags get 1316
 Process arbitrary API requests from a CSV or JSON Lines file.
 
 ```bash
-uv run courtlistener-cli batch --input-file data/batch.csv --format xlsx
-uv run courtlistener-cli batch --input-file data/batch.jsonl --output-path ./results/
+courtlistener-cli batch --input-file data/batch.csv --format xlsx
+courtlistener-cli batch --input-file data/batch.jsonl --output-path ./results/
 ```
 
 Input CSV format:
@@ -559,13 +559,13 @@ Weekly maintenance window: **Thursday 21:00–23:59 PT**.
 
 ```bash
 # Default: up to 10 pages, no row cap
-uv run courtlistener-cli search query --q '"serial number" firearm' --limit 0 --format json
+courtlistener-cli search query --q '"serial number" firearm' --limit 0 --format json
 
 # Exactly 25 results across however many pages needed
-uv run courtlistener-cli search query --q '"serial number" firearm' --limit 25 --format xlsx
+courtlistener-cli search query --q '"serial number" firearm' --limit 25 --format xlsx
 
 # Unbounded — fetch everything (use with care on large result sets)
-uv run courtlistener-cli search query --q '"serial number" firearm' --limit 0 --max-pages 0
+courtlistener-cli search query --q '"serial number" firearm' --limit 0 --max-pages 0
 ```
 
 ---

@@ -17,7 +17,7 @@ Use `uv` and the Makefile wrappers:
 
 - `make install`: sync runtime dependencies.
 - `make install-dev`: install editable package with dev extras.
-- `make run`: show CLI help (`uv run courtlistener-cli --help`).
+- `make run`: show CLI help (`courtlistener-cli --help`).
 - `make opinions-list`: run a quick opinions query example.
 - `make test`: run `pytest` with verbose short tracebacks.
 - `make lint`: run Ruff checks and formatting.
