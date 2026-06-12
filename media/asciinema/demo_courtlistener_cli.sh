@@ -201,24 +201,24 @@ source .venv/bin/activate
 slide "Version Check" "Verify the direct command is available after activation."
 run "courtlistener-cli --version"
 
-slide "CSV Export With Cached Output" "Run a larger query that saves results to a CSV file using the default cache/output flow."
-run "courtlistener-cli courts list --limit 100 --format csv"
+slide "CSV Export With Cached Output" "Run a moderate query that saves results to a CSV file using the default cache/output flow."
+run "courtlistener-cli courts list --limit 40 --format csv"
 
-slide "Print JSON Results to Screen" "Use --screen for a compact three-record preview, pipe it to less, and scroll slowly."
-page_run "courtlistener-cli --screen courts list --limit 3"
+slide "Print JSON Results to Screen" "Use --screen for a compact one-record preview, pipe it to less, and scroll slowly."
+page_run "courtlistener-cli --screen courts list --limit 1"
 
 slide "Fresh API Request Without Cache" "Use --no-cache with --screen to bypass local caching and inspect fresh API data."
-page_run "courtlistener-cli --no-cache --screen courts list --limit 3"
+page_run "courtlistener-cli --no-cache --screen courts list --limit 1"
 
-slide "Attorney Records: Export vs Screen" "Save a larger attorneys result set as CSV, then preview three records directly in the terminal."
-run "courtlistener-cli attorneys list --limit 100 --format csv"
-page_run "courtlistener-cli --screen attorneys list --limit 3"
+slide "Attorney Records: Export vs Screen" "Save a moderate attorneys result set as CSV, then preview one record directly in the terminal."
+run "courtlistener-cli attorneys list --limit 40 --format csv"
+page_run "courtlistener-cli --screen attorneys list --limit 1"
 
-slide "Financial Disclosures CSV Export" "Save a larger financial disclosures sample to CSV for downstream analysis."
-run "courtlistener-cli financial list --limit 100 --format csv"
+slide "Financial Disclosures CSV Export" "Save a moderate financial disclosures sample to CSV for downstream analysis."
+run "courtlistener-cli financial list --limit 40 --format csv"
 
 slide "Tags CSV Export" "Save tags linked to dockets using the same CSV export flow."
-run "courtlistener-cli tags list --limit 100 --format csv"
+run "courtlistener-cli tags list --limit 40 --format csv"
 
 # 3. Command Overview
 slide "Command Overview" "Finish with the CLI's own help output to show the available command groups."
