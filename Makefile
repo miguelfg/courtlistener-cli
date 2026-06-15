@@ -1,6 +1,6 @@
 # CourtListener Python CLI - Development Makefile
 
-.PHONY: install install-dev install-docs docs-build docs-serve lint format test run help clean search-slim-example docket-69717740 dockets-list docket-4134326-download-docs docket-4134326-parties
+.PHONY: install install-dev install-docs docs-build docs-serve lint format test run build publish help clean search-slim-example docket-69717740 dockets-list docket-4134326-download-docs docket-4134326-parties
 
 PROJECT_NAME = courtlistener-cli
 
@@ -16,6 +16,10 @@ help:
 	@echo "Installation:"
 	@echo "  make install          Install production dependencies"
 	@echo "  make install-dev      Install with dev dependencies"
+	@echo ""
+	@echo "Publishing:"
+	@echo "  make build            Build distribution packages (sdist and wheel)"
+	@echo "  make publish          Publish packages to PyPI (requires token)"
 	@echo ""
 	@echo "Development:"
 	@echo "  make lint             Run code linting (ruff)"
@@ -49,6 +53,14 @@ docs-build:
 
 docs-serve:
 	mkdocs serve
+
+build:
+	@echo "Building distribution packages..."
+	uv build
+
+publish: build
+	@echo "Publishing to PyPI..."
+	uv publish
 
 lint:
 	-ruff check src/ tests/ --fix
