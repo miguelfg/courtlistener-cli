@@ -54,6 +54,16 @@ class Config:
         """Check if timestamps should be included"""
         return os.getenv('INCLUDE_TIMESTAMP', 'true').lower() == 'true'
 
+    @property
+    def inter_page_delay(self) -> float:
+        """Get delay between paginated requests in seconds"""
+        return float(os.getenv('COURTLISTENER_DELAY', '13.0'))
+
+    @inter_page_delay.setter
+    def inter_page_delay(self, value: float):
+        """Set delay between paginated requests in seconds"""
+        os.environ['COURTLISTENER_DELAY'] = str(value)
+
 
 # Global config instance
 config = Config()

@@ -1,6 +1,7 @@
 """Main Click CLI entry point for CourtListener"""
 
 import click
+from .config import config
 from .commands.opinions_commands import opinions
 from .commands.search_commands import search
 from .commands.courts_commands import courts
@@ -24,8 +25,9 @@ from .commands.tags_commands import tags
 @click.version_option(version='1.0.0')
 @click.option('--no-cache', is_flag=True, help='Disable local caching for this request')
 @click.option('--screen', is_flag=True, help='Print results to screen (JSON format)')
+@click.option('--delay', type=float, help='Delay between paginated requests (seconds)')
 @click.pass_context
-def main(ctx, no_cache, screen):
+def main(ctx, no_cache, screen, delay):
     """CourtListener REST API Python CLI Client
 
     Access federal and state case law, PACER data, RECAP Archive,
@@ -34,6 +36,10 @@ def main(ctx, no_cache, screen):
     ctx.ensure_object(dict)
     ctx.obj['no_cache'] = no_cache
     ctx.obj['screen'] = screen
+    
+    if delay is not None:
+        config.inter_page_delay = delay
+        ctx.obj['delay'] = delay
 
 
 # Existing command groups

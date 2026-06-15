@@ -4,9 +4,7 @@ import time
 from urllib.parse import parse_qs, urlparse
 from typing import Any, Callable, Dict, List, Optional
 from .client import DailyQuotaExceeded
-
-_INTER_PAGE_DELAY = 13.0  # seconds between paginated requests — respects 5 req/min authenticated limit
-
+from .config import config
 
 ProgressLogger = Callable[[int, int, int, Optional[int]], None]
 
@@ -17,6 +15,7 @@ def paginate_endpoint(
     limit: int,
     max_pages: int,
     progress_logger: Optional[ProgressLogger] = None,
+    delay: Optional[float] = None,
 ) -> Dict[str, Any]:
     """Fetch paginated results until result or page limits are reached.
 
@@ -30,6 +29,7 @@ def paginate_endpoint(
     if max_pages < 0:
         raise ValueError("--max-pages must be >= 0")
 
+    inter_page_delay = delay if delay is not None else config.inter_page_delay
     target_total = None if limit == 0 else limit
     all_results: List[Dict[str, Any]] = []
     total_count = 0
@@ -73,7 +73,8 @@ def paginate_endpoint(
         if not next_url or not page_results:
             break
 
-        time.sleep(_INTER_PAGE_DELAY)
+        if inter_page_delay > 0:
+            time.sleep(inter_page_delay)
 
     return {
         "count": total_count,

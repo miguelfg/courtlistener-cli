@@ -79,6 +79,7 @@ courtlistener-cli citation-lookup citation --volume 576 --reporter "U.S." --page
 | `LOG_TO_FILE` | `false` | Write logs to file |
 | `OUTPUT_FORMAT` | `xlsx` | Default output format |
 | `INCLUDE_TIMESTAMP` | `true` | Timestamp in output filenames |
+| `COURTLISTENER_DELAY` | `13.0` | Delay between paginated requests (seconds) |
 
 #### Getting your session ID (`COURTLISTENER_SESSION_ID`)
 
@@ -97,6 +98,7 @@ Without this, `download-docs` falls back to API pagination (slower, more rate-li
 |---|---|
 | `--no-cache` | Disable local caching and force fresh API requests |
 | `--screen` | Print results directly to the console in JSON format |
+| `--delay FLOAT` | Delay between paginated requests in seconds |
 | `--version` | Show tool version |
 | `--help` | Show help message |
 
@@ -110,6 +112,8 @@ Without this, `download-docs` falls back to API pagination (slower, more rate-li
 | `--limit 0 --max-pages 0` | Full unbounded crawl — fetch until API has no `next` |
 
 Progress is printed per page: `→ Page 3: +20 results (accumulated 60/100)`
+
+> **Rate limiting:** Use `--delay N` to adjust the wait time between pages. The default is 13 seconds to keep within the 5 req/min authenticated limit.
 
 ---
 

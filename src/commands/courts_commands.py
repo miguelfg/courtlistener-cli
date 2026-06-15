@@ -20,11 +20,12 @@ def courts():
 @click.option('--max-pages', default=10, type=int,
               help='Maximum pages to fetch (0 = no page cap)')
 @click.option('--offset', default=0, help='Pagination offset')
+@click.option('--delay', type=float, help='Delay between requests in seconds')
 @click.option('--format', 'output_format', default='json',
               type=click.Choice(['json', 'csv', 'xlsx']))
 @click.option('--output', 'output_path', default='./output',
               type=click.Path())
-def list_courts(limit, max_pages, offset, output_format, output_path):
+def list_courts(limit, max_pages, offset, delay, output_format, output_path):
     """List all courts"""
     client = CourtListenerClient()
     
@@ -36,6 +37,7 @@ def list_courts(limit, max_pages, offset, output_format, output_path):
             initial_params=params,
             limit=limit,
             max_pages=max_pages,
+            delay=delay,
             progress_logger=lambda page, page_count, accumulated, target: click.echo(
                 f"→ Page {page}: +{page_count} courts "
                 f"(accumulated {accumulated}/{target if target is not None else 'all'})"
