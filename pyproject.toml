@@ -9,9 +9,9 @@ description = "Python CLI client for CourtListener REST API"
 readme = "README.md"
 license = {text = "CC0"}
 authors = [
-    {name = "Miguel FG", email = "miguelfg@users.noreply.github.com"}
+    {name = "Miguel FG", email = "miguel.fiandor.gutierrez@gmail.com"}
 ]
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Environment :: Console",
@@ -20,8 +20,6 @@ classifiers = [
     "License :: CC0 1.0 Universal (CC0 1.0) Public Domain Dedication",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
