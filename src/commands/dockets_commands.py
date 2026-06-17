@@ -111,7 +111,7 @@ def list_dockets(input_file, column, limit, max_pages, offset, court, docket_num
             for idx, query_value in enumerate(query_values, start=1):
                 click.echo(f"→ Query {idx}/{len(query_values)}: {query_value}")
                 try:
-                    if column.lower() in {'id', 'docket_id'}:
+                    if column.lower() in {'id', 'docket_id', 'docket'}:
                         docket = client.get(f"/dockets/{query_value}/")
                         pages_fetched += 1
                         if isinstance(docket, dict):

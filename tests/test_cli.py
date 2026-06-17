@@ -97,6 +97,42 @@ def test_dockets_list_batch_csv_uses_column_values(monkeypatch, tmp_path):
     assert calls[1][1]["docket_number"] == "B-456"
 
 
+def test_dockets_list_batch_treats_docket_column_as_id(monkeypatch, tmp_path):
+    """A docket column with numeric IDs should fetch docket detail endpoints."""
+    input_file = tmp_path / "dockets.csv"
+    with open(input_file, "w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=["docket"])
+        writer.writeheader()
+        writer.writerow({"docket": "70265088"})
+
+    calls = []
+
+    def mock_get(self, endpoint, **kwargs):
+        calls.append((endpoint, kwargs.get("params")))
+        return {"id": 70265088, "case_name": "United States v. Loredo"}
+
+    monkeypatch.setattr("src.commands.dockets_commands.CourtListenerClient.get", mock_get)
+
+    output_dir = tmp_path / "out"
+    runner = CliRunner()
+    result = runner.invoke(
+        main,
+        [
+            "dockets",
+            "list",
+            str(input_file),
+            "--column",
+            "docket",
+            "--output",
+            str(output_dir),
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert len(calls) == 1
+    assert calls[0][0] == "/dockets/70265088/"
+
+
 def test_dockets_list_filters_by_docket_number(monkeypatch, tmp_path):
     """Direct dockets list should support docket-number filtering."""
     calls = []
