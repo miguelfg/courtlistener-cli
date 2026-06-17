@@ -90,6 +90,10 @@ The `dockets download-docs` command can fetch a full doc list in one request ins
 3. Copy the value of the `sessionid` cookie
 4. Add it to `.env`: `COURTLISTENER_SESSION_ID=<value>`
 
+Example in Chrome DevTools:
+
+![Chrome DevTools showing the `sessionid` cookie under the CourtListener domain](docs/assets/courtlistener-sessionid-example.png)
+
 Without this, `download-docs` falls back to API pagination (slower, more rate-limited). Sessions expire periodically — refresh the value when you start seeing the fallback again.
 
 ### Global Options

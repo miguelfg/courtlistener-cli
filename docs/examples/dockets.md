@@ -39,6 +39,16 @@ courtlistener-cli dockets download-docs 4134326 --output ./output --manifest csv
 courtlistener-cli dockets download-docs 4134326 --output ./output --manifest xlsx --all-docs
 ```
 
+For the fast CSV export path, save your browser `sessionid` cookie into `.env` as
+`COURTLISTENER_SESSION_ID`.
+
+1. Log in to [courtlistener.com](https://www.courtlistener.com) in Chrome
+2. Open DevTools and go to **Application** → **Cookies** → `https://www.courtlistener.com`
+3. Copy the value of the `sessionid` cookie
+4. Add it to `.env`
+
+![Chrome DevTools showing the `sessionid` cookie under the CourtListener domain](../assets/courtlistener-sessionid-example.png)
+
 Export docket parties:
 
 ```bash
