@@ -2,6 +2,7 @@
 
 import csv
 import json
+from pathlib import Path
 import pytest
 from click.testing import CliRunner
 from src.cli import main
@@ -163,6 +164,60 @@ def test_dockets_list_filters_by_docket_number(monkeypatch, tmp_path):
     assert calls[0][0] == "/dockets/"
     assert calls[0][1]["docket_number"] == "1:16-cv-00745"
     assert calls[0][1]["court"] == "dcd"
+
+
+@pytest.mark.parametrize(
+    ("folder_name_mode", "expected_suffix"),
+    [
+        ("case-name-number", "United States v. Keeton ; 2_22-cr-00327"),
+        ("docket-id", "68608890"),
+        ("none", ""),
+    ],
+)
+def test_download_docs_folder_name_mode_controls_output_dir(monkeypatch, tmp_path,
+                                                            folder_name_mode, expected_suffix):
+    """download-docs should let users choose how the output folder is named."""
+    calls = []
+
+    def mock_get(self, endpoint, **kwargs):
+        assert endpoint == "/dockets/68608890/"
+        return {
+            "case_name": "United States v. Keeton",
+            "case_name_short": "Keeton",
+            "docket_number": "2:22-cr-00327",
+        }
+
+    def mock_try_csv_export(url, client, case_dir):
+        return []
+
+    def mock_save_xlsx(data, output_path, include_timestamp=False, filename_stem="results",
+                       concat_list_fields_char=';'):
+        calls.append((Path(output_path), filename_stem))
+        return Path(output_path) / f"{filename_stem}.xlsx"
+
+    monkeypatch.setattr("src.commands.dockets_commands.CourtListenerClient.get", mock_get)
+    monkeypatch.setattr("src.commands.dockets_commands._try_csv_export", mock_try_csv_export)
+    monkeypatch.setattr("src.commands.dockets_commands.save_xlsx", mock_save_xlsx)
+
+    output_dir = tmp_path / "pdfs" / "68608890"
+    runner = CliRunner()
+    result = runner.invoke(
+        main,
+        [
+            "dockets",
+            "download-docs",
+            "68608890",
+            "--output",
+            str(output_dir),
+            "--folder-name-mode",
+            folder_name_mode,
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert len(calls) == 1
+    assert calls[0][0] == output_dir / expected_suffix
+    assert calls[0][1] == "docs_68608890"
 
 
 def test_search_query_paginates_until_requested_limit(monkeypatch, tmp_path):

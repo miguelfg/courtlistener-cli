@@ -37,7 +37,17 @@ Download docket documents:
 courtlistener-cli dockets download-docs 4134326 --output ./output
 courtlistener-cli dockets download-docs 4134326 --output ./output --manifest csv
 courtlistener-cli dockets download-docs 4134326 --output ./output --manifest xlsx --all-docs
+courtlistener-cli dockets download-docs 4134326 --output ./output --folder-name-mode docket-id
+courtlistener-cli dockets download-docs 4134326 --output ./output --folder-name-mode none
 ```
+
+Folder naming modes:
+
+- `case-name-number` keeps the current default, for example `United States v. Keeton ; 2_22-cr-00327`
+- `case-name` writes only the case name
+- `docket-number` writes only the docket number
+- `docket-id` writes only the CourtListener docket ID
+- `none` writes directly into `--output`
 
 For the fast CSV export path, save your browser `sessionid` cookie into `.env` as
 `COURTLISTENER_SESSION_ID`.

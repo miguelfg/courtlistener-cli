@@ -11,7 +11,7 @@ from ..client import CourtListenerClient
 from ..output import save_json, save_csv, save_xlsx
 from ..pagination import paginate_endpoint
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +21,22 @@ _STORAGE_BASE = "https://storage.courtlistener.com/"
 def _safe_folder_name(name: str) -> str:
     """Strip characters that are illegal in directory names on common OSes."""
     return re.sub(r'[<>:"/\\|?*\x00-\x1f]', '_', name).strip()
+
+
+def _download_docs_folder_name(docket_id: int, docket: dict, folder_name_mode: str) -> Optional[str]:
+    """Build the subfolder name for download-docs, or None to use the output dir directly."""
+    case_name = docket.get('case_name') or docket.get('case_name_short') or f'docket_{docket_id}'
+    docket_number = docket.get('docket_number') or str(docket_id)
+
+    if folder_name_mode == 'none':
+        return None
+    if folder_name_mode == 'docket-id':
+        return str(docket_id)
+    if folder_name_mode == 'docket-number':
+        return docket_number
+    if folder_name_mode == 'case-name':
+        return case_name
+    return f"{case_name} ; {docket_number}"
 
 
 def _read_batch_values(input_file: Path, column: str) -> List[str]:
@@ -328,13 +344,16 @@ def count_dockets(court, case_name):
 @dockets.command('download-docs')
 @click.argument('docket_id', type=int)
 @click.option('--output', 'output_path', default='./output', type=click.Path(),
-              help='Parent directory; a case-named subfolder is created automatically')
+              help='Parent directory for downloaded files')
 @click.option('--manifest', 'manifest_format', default='xlsx',
               type=click.Choice(['xlsx', 'csv']),
               help='Format for the manifest spreadsheet')
 @click.option('--all-docs', 'all_docs', is_flag=True, default=False,
               help='Also fetch unavailable docs (slower — paginates all recap documents)')
-def download_docs(docket_id, output_path, manifest_format, all_docs):
+@click.option('--folder-name-mode', default='case-name-number',
+              type=click.Choice(['case-name-number', 'case-name', 'docket-number', 'docket-id', 'none']),
+              help='Choose how the download folder is named; use none to write directly into --output')
+def download_docs(docket_id, output_path, manifest_format, all_docs, folder_name_mode):
     """Download all free PDFs for a docket and generate a manifest.
 
     By default only fetches available docs (is_available=True), which is fast
@@ -346,12 +365,11 @@ def download_docs(docket_id, output_path, manifest_format, all_docs):
         # --- 1. Fetch docket metadata for folder naming ---
         click.echo(f"→ Fetching docket {docket_id} metadata…")
         docket = client.get(f'/dockets/{docket_id}/')
-        case_name = docket.get('case_name') or docket.get('case_name_short') or f'docket_{docket_id}'
-        docket_number = docket.get('docket_number') or str(docket_id)
-        raw_folder = f"{case_name} ; {docket_number}"
-        folder_name = _safe_folder_name(raw_folder)
+        folder_name = _download_docs_folder_name(docket_id, docket, folder_name_mode)
 
-        case_dir = Path(output_path) / folder_name
+        output_dir = Path(output_path)
+        output_dir.mkdir(parents=True, exist_ok=True)
+        case_dir = output_dir if folder_name is None else output_dir / _safe_folder_name(folder_name)
         case_dir.mkdir(parents=True, exist_ok=True)
         click.echo(f"→ Case folder: {case_dir}")
 

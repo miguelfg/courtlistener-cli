@@ -96,6 +96,14 @@ Example in Chrome DevTools:
 
 Without this, `download-docs` falls back to API pagination (slower, more rate-limited). Sessions expire periodically — refresh the value when you start seeing the fallback again.
 
+Use `--folder-name-mode` if you want the downloads grouped differently:
+
+- `case-name-number` keeps the default `Case Name ; Docket Number` folder
+- `case-name` uses only the case name
+- `docket-number` uses only the docket number
+- `docket-id` uses only the CourtListener docket ID
+- `none` writes directly into `--output`
+
 ### Global Options
 
 | Flag | Description |
