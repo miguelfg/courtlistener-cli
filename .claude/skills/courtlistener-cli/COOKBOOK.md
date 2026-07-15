@@ -15,12 +15,23 @@ Skill runs `audio list --court scotus --limit 20`, saves JSON, and answers with 
 ## 2. Count before you crawl
 
 ```bash
-claude -p "How many opinions match 'qualified immunity'? If it's under 200, export them all to xlsx"
+claude -p 'How many SCOTUS opinions match "qualified immunity"? If under 250, export them all to xlsx. If over, just report the count and the cheapest narrowing options — no follow-up questions.'
 ```
 
-Skill runs `search count --q '"qualified immunity"' --type o` first (1 request). Only if the count is affordable does it launch `search query ... --format xlsx`, estimating pages against the daily quota before starting.
+Skill runs `search count --q '"qualified immunity"' --type o --court scotus` first (1 request). Only if the count is affordable does it launch `search query ... --format xlsx`, estimating pages against the daily quota before starting. The "no follow-up questions" clause matters in `-p` one-shot mode — nobody is there to answer.
 
-<!-- TODO screenshot: count answer + go/no-go decision -->
+Example response:
+
+> Done. **1,550** loose match (both words anywhere), **231** exact phrase "qualified immunity". Under 250 as phrase — exported all.
+>
+> - File: `output/scotus_qualified_immunity.xlsx` — 233 rows (2 duplicate rows from pagination drift; 231 unique cluster_ids), 35 columns.
+> - Coverage: 1974–2026, all Published status. Peak years: 2012 and 2021 (10 each), 1994 (9), 2014 (9).
+> - Most-cited opinion in set: 154,431 cites. `scdb_id` filled for 171 rows (Supreme Court Database link).
+> - Quota used: ~15 requests of 50/hour.
+>
+> If loose 1,550 set is what you wanted: cheapest narrowing = exact phrase (done, 231), or add `dateFiled:[2000-01-01 TO *]` in query (1 request to count).
+
+Unfiltered, the same phrase matches ~99k opinions across all courts (~5,000 pages ≈ 6 weeks of daily quota) — the skill reports the count and refuses the crawl instead of exporting.
 
 ## 3. Docket deep dive
 
@@ -38,7 +49,27 @@ docket-entries list --docket 4214664 --limit 25
 
 Answer merges them: party roles, counsel per party, most recent filings.
 
-<!-- TODO screenshot: merged parties/attorneys/entries answer -->
+Example response:
+
+> Docket 4214664 = **National Veterans Legal Services Program v. United States**, D.D.C. 1:16-cv-00745, Judge Paul L. Friedman — the PACER-fees class action. Filed 2016-04-21, last filing 2026-06-17, 327 total entries, 35 parties.
+>
+> **Plaintiffs (3):** National Veterans Legal Services Program, National Consumer Law Center, Alliance for Justice. Shared counsel: William H. Narwold, Meghan S.B. Oliver (both Motley Rice; lead, pro hac vice), Jonathan E. Taylor and Deepak Gupta (Gupta Wessler), Elizabeth Smith.
+>
+> **Defendant:** United States of America. Active counsel: Brenda A. Gonzalez Horowitz (lead). Terminated over case life: Derek S. Hammond, Jeremy S. Simon, Robert Aaron Caplen, Brian J. Field, William Mark Nebeker.
+>
+> **Amici (25):** big press coalition (Reporters Committee for Freedom of the Press, AP Media Editors, Seattle Times, Center for Investigative Reporting, Reporters Without Borders, etc.) all via Bruce D. Brown; law/tech scholars (Jonathan Zittrain, Phillip Malone, Thomas Bruce, Deborah Beim, American Association of Law Libraries) via Sasha Samberg-Champion; former legislators Darrell Issa and Joseph Lieberman via Mark Bailen.
+>
+> **Interested parties (4):** Eric Alan Isaacson (pro se objector), Troy Law PLLC (John Troy), Rob Rawson, Rosemarie Howell. **Movants (2):** Michael T. Pines, Don Kozich (pro se).
+>
+> **Latest entries — case is over**
+>
+> - **#178, 2026-06-12** — Federal Circuit **mandate** issued on objector Isaacson's appeal (USCA 24-1757); USCA judgment dated 2026-03-20. Settlement now final.
+> - **#177, 2024-10-30** — leave to file pro se letter denied.
+> - **#175–176, May 2024** — hearing transcripts issued.
+> - **#171–174, Apr 2024** — Isaacson's notice of appeal to Federal Circuit ($605 fee; earlier D.C. Circuit notice entered in error).
+> - **#169–170, 2024-03-20** — **Opinion and Final Judgment approving the class settlement** plus attorneys' fees, costs, service awards.
+>
+> Raw exports in `output/docket4214664/` (docket.json, parties.json, attorneys.json, entries.json). Quota used: ~7 requests.
 
 ## 4. Batch lookup from a spreadsheet
 
@@ -76,8 +107,6 @@ Run the recipe's `claude -p` command, screenshot the terminal answer, drop the P
 
 | Recipe | Suggested filename |
 |---|---|
-| 2 — count-first decision | `demo-count-first.png` |
-| 3 — docket deep dive | `demo-docket-deep-dive.png` |
 | 4 — batch spreadsheet lookup | `demo-batch-lookup.png` |
 | 5 — citation check | `demo-citation-check.png` |
 | 6 — stats profile | `demo-result-stats.png` |
