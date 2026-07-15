@@ -79,7 +79,20 @@ claude -p "Look up every docket number in data/dockets.xlsx in the dcd court and
 
 Skill runs `dockets list data/dockets.xlsx --column docketNumber --court dcd --format xlsx`. One paginated query per row; results carry `_query_value` tracing which input row matched. Skill warns first when the sheet has many rows (each row ≥ 1 request).
 
-<!-- TODO screenshot: batch run with per-row progress lines -->
+Example response (5-row input sheet):
+
+> Done. Exported 16 dockets to `results/results.xlsx`.
+>
+> Per docket number:
+> - `1:22-cr-00015` — 12 rows: *United States v. Rhodes III* (Jan 6 seditious conspiracy), one docket per defendant (defendant numbers 1–11 plus main)
+> - `1:20-cv-03010` — 2 rows: *United States v. Google LLC* (antitrust)
+> - `1:21-cv-00400` — 1 row: *Lee v. Trump*
+> - `1:23-cv-02043` — 1 row: *Shakoori v. Blinken*
+> - `3:22-cv-07182` — **0 rows in dcd**. Office prefix `3:` not DC district; likely N.D. Cal. Rerun without `--court dcd` or with correct court if wanted.
+>
+> Each row has `_query_value` column tracing back to input docket number. 5 API requests used.
+
+Note the fan-out: one docket number can match several dockets (per-defendant criminal dockets), and a zero-match row gets diagnosed instead of silently dropped.
 
 ## 5. Citation hallucination check
 
@@ -107,6 +120,5 @@ Run the recipe's `claude -p` command, screenshot the terminal answer, drop the P
 
 | Recipe | Suggested filename |
 |---|---|
-| 4 — batch spreadsheet lookup | `demo-batch-lookup.png` |
 | 5 — citation check | `demo-citation-check.png` |
 | 6 — stats profile | `demo-result-stats.png` |
