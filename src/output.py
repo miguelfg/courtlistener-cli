@@ -113,7 +113,7 @@ def save_xlsx(
     print_to_screen(data)
     try:
         from openpyxl import Workbook
-        from openpyxl.styles import Font, PatternFill, Alignment
+        from openpyxl.styles import Font, PatternFill
     except ImportError:
         raise ImportError(
             "openpyxl required for XLSX export. Install: pip install openpyxl"
@@ -160,7 +160,7 @@ def save_xlsx(
             try:
                 if len(str(cell.value)) > max_length:
                     max_length = len(str(cell.value))
-            except:
+            except Exception:
                 pass
         ws.column_dimensions[col[0].column_letter].width = min(max_length + 2, 50)
 

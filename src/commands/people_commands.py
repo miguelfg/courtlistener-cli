@@ -87,13 +87,12 @@ def count_people(name):
     """Return total matching people count"""
     client = CourtListenerClient()
 
-    params = {"page_size": 1}
+    params = {}
     if name:
         params["name_last"] = name
 
     try:
-        result = client.get("/people/", params=params)
-        click.echo(result.get("count", 0))
+        click.echo(client.count("/people/", params))
     except Exception as e:
         click.echo(f"Error: {e}", err=True)
         raise SystemExit(1)

@@ -24,7 +24,7 @@ def test_courts_list_passes_delay_to_pagination():
     with patch(
         "src.commands.courts_commands.CourtListenerClient.get",
         return_value=mock_response,
-    ) as mock_get:
+    ):
         with patch("src.commands.courts_commands.paginate_endpoint") as mock_paginate:
             runner.invoke(main, ["courts", "list", "--delay", "2.5"])
 

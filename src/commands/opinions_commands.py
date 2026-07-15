@@ -25,7 +25,7 @@ def opinions():
     "--max-pages", default=10, type=int, help="Maximum pages to fetch (0 = no page cap)"
 )
 @click.option("--offset", default=0, help="Pagination offset")
-@click.option("--search", default=None, help="Full-text search")
+@click.option("--search", default=None, help="Full-text search (via /search/ endpoint)")
 @click.option(
     "--format",
     "output_format",
@@ -44,14 +44,16 @@ def list_opinions(limit, max_pages, offset, search, output_format, output_path):
     """List opinions with pagination"""
     client = CourtListenerClient()
 
+    # /opinions/ has no full-text filter in v4 — full-text queries go to /search/
+    endpoint = "/search/" if search else "/opinions/"
     params = {"page_size": 100 if limit == 0 else max(limit, 1)}
     if search:
-        params["search"] = search
+        params.update({"q": search, "type": "o"})
 
     try:
         output_data = paginate_endpoint(
             fetch_page=lambda request_params: client.get(
-                "/opinions/", params=request_params
+                endpoint, params=request_params
             ),
             initial_params=params,
             limit=limit,
@@ -95,18 +97,20 @@ def list_opinions(limit, max_pages, offset, search, output_format, output_path):
 
 
 @opinions.command("count")
-@click.option("--search", default=None, help="Full-text search")
+@click.option("--search", default=None, help="Full-text search (via /search/ endpoint)")
 def count_opinions(search):
     """Return total matching opinions count"""
     client = CourtListenerClient()
 
-    params = {"page_size": 1}
-    if search:
-        params["search"] = search
-
     try:
-        result = client.get("/opinions/", params=params)
-        click.echo(result.get("count", 0))
+        if search:
+            # /opinions/ has no full-text filter in v4 — full text lives in /search/
+            result = client.get(
+                "/search/", params={"q": search, "type": "o", "limit": 1}
+            )
+            click.echo(result.get("count", 0))
+        else:
+            click.echo(client.count("/opinions/"))
     except Exception as e:
         error = str(e)
         if "401" in error or "Unauthorized" in error:

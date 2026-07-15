@@ -97,6 +97,17 @@ class CourtListenerClient:
         """Make a GET request"""
         return self.request("GET", endpoint, **kwargs)
 
+    def count(self, endpoint: str, params: Optional[Dict] = None) -> int:
+        """Return the total match count for a DRF endpoint.
+
+        API v4 replaced the numeric count with a URL; passing count=on makes
+        the API return {"count": N} directly. Not for /search/, which keeps a
+        native numeric count.
+        """
+        params = dict(params or {})
+        params["count"] = "on"
+        return self.get(endpoint, params=params).get("count", 0)
+
     def post(
         self, endpoint: str, data: Optional[Dict] = None, **kwargs
     ) -> Dict[str, Any]:

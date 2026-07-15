@@ -401,15 +401,14 @@ def count_dockets(court, case_name):
     """Return total matching dockets count"""
     client = CourtListenerClient()
 
-    params = {"page_size": 1}
+    params = {}
     if court:
         params["court"] = court
     if case_name:
         params["case_name"] = case_name
 
     try:
-        result = client.get("/dockets/", params=params)
-        click.echo(result.get("count", 0))
+        click.echo(client.count("/dockets/", params))
     except Exception as e:
         click.echo(f"Error: {e}", err=True)
         raise SystemExit(1)
@@ -453,6 +452,8 @@ def download_docs(docket_id, output_path, manifest_format, all_docs, folder_name
     and avoids rate-limit throttling. Use --all-docs to include unavailable ones.
     """
     client = CourtListenerClient()
+    case_dir = None
+    output_dir = None
 
     try:
         # --- 1. Fetch docket metadata for folder naming ---
@@ -561,6 +562,15 @@ def download_docs(docket_id, output_path, manifest_format, all_docs, folder_name
     except Exception as e:
         click.echo(f"Error: {e}", err=True)
         raise SystemExit(1)
+    finally:
+        # Don't leave an empty case folder behind when nothing was written
+        if (
+            case_dir is not None
+            and case_dir != output_dir
+            and case_dir.is_dir()
+            and not any(case_dir.iterdir())
+        ):
+            case_dir.rmdir()
 
 
 def _try_csv_export(

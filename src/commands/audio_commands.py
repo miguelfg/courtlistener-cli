@@ -92,7 +92,7 @@ def count_audio(court, year):
     """Return total matching recordings count"""
     client = CourtListenerClient()
 
-    params = {"page_size": 1}
+    params = {}
     if court:
         params["docket__court"] = court
     if year:
@@ -100,8 +100,7 @@ def count_audio(court, year):
         params["date_argued_lte"] = f"{year}-12-31"
 
     try:
-        result = client.get("/audio/", params=params)
-        click.echo(result.get("count", 0))
+        click.echo(client.count("/audio/", params))
     except Exception as e:
         click.echo(f"Error: {e}", err=True)
         raise SystemExit(1)

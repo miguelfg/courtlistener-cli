@@ -143,15 +143,14 @@ def count_clusters(docket, court):
     """Return total matching clusters count"""
     client = CourtListenerClient()
 
-    params = {"page_size": 1}
+    params = {}
     if docket:
         params["docket"] = docket
     if court:
         params["docket__court"] = court
 
     try:
-        result = client.get("/clusters/", params=params)
-        click.echo(result.get("count", 0))
+        click.echo(client.count("/clusters/", params))
     except Exception as e:
         click.echo(f"Error: {e}", err=True)
         raise SystemExit(1)

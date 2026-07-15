@@ -176,15 +176,14 @@ def count_courts(jurisdiction, court_type):
     """Return total matching courts count"""
     client = CourtListenerClient()
 
-    params: dict = {"page_size": 1}
+    params: dict = {}
     if jurisdiction:
         params["jurisdiction"] = jurisdiction
     if court_type:
         params["court_type"] = court_type
 
     try:
-        result = client.get("/courts/", params=params)
-        click.echo(result.get("count", 0))
+        click.echo(client.count("/courts/", params))
     except Exception as e:
         click.echo(f"Error: {e}", err=True)
         raise SystemExit(1)

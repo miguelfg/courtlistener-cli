@@ -238,6 +238,43 @@ def test_download_docs_folder_name_mode_controls_output_dir(
     assert calls[0][1] == "docs_68608890"
 
 
+def test_download_docs_failure_leaves_no_empty_case_dir(monkeypatch, tmp_path):
+    """A failed run must not leave an empty case folder behind."""
+
+    def mock_get(self, endpoint, **kwargs):
+        return {
+            "case_name": "Stub Case",
+            "case_name_short": "Stub",
+            "docket_number": "1:23-cv-1",
+        }
+
+    def mock_try_csv_export(url, client, case_dir):
+        return None
+
+    def mock_doc_rows_from_api(*args, **kwargs):
+        raise RuntimeError("quota exceeded")
+
+    monkeypatch.setattr(
+        "src.commands.dockets_commands.CourtListenerClient.get", mock_get
+    )
+    monkeypatch.setattr(
+        "src.commands.dockets_commands._try_csv_export", mock_try_csv_export
+    )
+    monkeypatch.setattr(
+        "src.commands.dockets_commands._doc_rows_from_api", mock_doc_rows_from_api
+    )
+
+    output_dir = tmp_path / "output"
+    runner = CliRunner()
+    result = runner.invoke(
+        main,
+        ["dockets", "download-docs", "68608890", "--output", str(output_dir)],
+    )
+
+    assert result.exit_code == 1
+    assert list(output_dir.iterdir()) == []
+
+
 def test_search_query_paginates_until_requested_limit(monkeypatch, tmp_path):
     """Search should aggregate pages until it reaches requested total."""
     page_1 = {
@@ -686,35 +723,41 @@ def test_docket_entries_paginates_until_limit(monkeypatch, tmp_path):
     "command,module_path,expected_endpoint,expected_params",
     [
         (
-            ["opinions", "count", "--search", "brown"],
+            ["opinions", "count"],
             "src.commands.opinions_commands.CourtListenerClient.get",
             "/opinions/",
-            {"page_size": 1, "search": "brown"},
+            {"count": "on"},
+        ),
+        (
+            ["opinions", "count", "--search", "brown"],
+            "src.commands.opinions_commands.CourtListenerClient.get",
+            "/search/",
+            {"q": "brown", "type": "o", "limit": 1},
         ),
         (
             ["courts", "count", "--jurisdiction", "federal", "--court-type", "federal"],
             "src.commands.courts_commands.CourtListenerClient.get",
             "/courts/",
-            {"page_size": 1, "jurisdiction": "federal", "court_type": "federal"},
+            {"count": "on", "jurisdiction": "federal", "court_type": "federal"},
         ),
         (
             ["dockets", "count", "--court", "scotus", "--case-name", "Roe"],
             "src.commands.dockets_commands.CourtListenerClient.get",
             "/dockets/",
-            {"page_size": 1, "court": "scotus", "case_name": "Roe"},
+            {"count": "on", "court": "scotus", "case_name": "Roe"},
         ),
         (
             ["people", "count", "--name", "Smith"],
             "src.commands.people_commands.CourtListenerClient.get",
             "/people/",
-            {"page_size": 1, "name_last": "Smith"},
+            {"count": "on", "name_last": "Smith"},
         ),
         (
             ["audio", "count", "--court", "ca9", "--year", "2020"],
             "src.commands.audio_commands.CourtListenerClient.get",
             "/audio/",
             {
-                "page_size": 1,
+                "count": "on",
                 "docket__court": "ca9",
                 "date_argued_gte": "2020-01-01",
                 "date_argued_lte": "2020-12-31",
