@@ -1,0 +1,12 @@
+# Skill is docs-only; ignore any accidental installs/test artifacts
+.venv/
+venv/
+*.egg-info/
+__pycache__/
+node_modules/
+courtlistener-cli/
+output/
+*.xlsx
+*.csv
+*.json
+*.zip
