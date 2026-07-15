@@ -7,62 +7,66 @@ from dotenv import load_dotenv
 
 class Config:
     """Configuration handler"""
-    
+
     def __init__(self):
         # Load .env file
-        env_file = Path('.env')
+        env_file = Path(".env")
         if env_file.exists():
             load_dotenv(env_file)
-    
+
     @property
     def api_token(self) -> str:
-        """Get API token from environment"""
-        return os.getenv('COURTLISTENER_API_TOKEN', '')
+        """Get API token from environment (COURTLISTENER_API_KEY accepted as legacy alias)"""
+        return os.getenv("COURTLISTENER_API_TOKEN") or os.getenv(
+            "COURTLISTENER_API_KEY", ""
+        )
 
     @property
     def session_id(self) -> str:
         """Get browser session ID for web endpoints (e.g. CSV export)"""
-        return os.getenv('COURTLISTENER_SESSION_ID', '')
-    
+        return os.getenv("COURTLISTENER_SESSION_ID", "")
+
     @property
     def base_url(self) -> str:
         """Get API base URL"""
-        return os.getenv('COURTLISTENER_BASE_URL', 'https://www.courtlistener.com/api/rest/v4')
-    
+        return os.getenv(
+            "COURTLISTENER_BASE_URL", "https://www.courtlistener.com/api/rest/v4"
+        )
+
     @property
     def timeout(self) -> int:
         """Get request timeout in seconds"""
-        return int(os.getenv('COURTLISTENER_TIMEOUT', '30'))
-    
+        return int(os.getenv("COURTLISTENER_TIMEOUT", "30"))
+
     @property
     def log_level(self) -> str:
         """Get log level"""
-        return os.getenv('LOG_LEVEL', 'DEBUG')
-    
+        return os.getenv("LOG_LEVEL", "DEBUG")
+
     @property
     def log_to_file(self) -> bool:
         """Check if logging to file"""
-        return os.getenv('LOG_TO_FILE', 'false').lower() == 'true'
-    
+        return os.getenv("LOG_TO_FILE", "false").lower() == "true"
+
     @property
     def output_format(self) -> str:
         """Get default output format"""
-        return os.getenv('OUTPUT_FORMAT', 'xlsx')
-    
+        return os.getenv("OUTPUT_FORMAT", "xlsx")
+
     @property
     def include_timestamp(self) -> bool:
         """Check if timestamps should be included"""
-        return os.getenv('INCLUDE_TIMESTAMP', 'true').lower() == 'true'
+        return os.getenv("INCLUDE_TIMESTAMP", "true").lower() == "true"
 
     @property
     def inter_page_delay(self) -> float:
         """Get delay between paginated requests in seconds"""
-        return float(os.getenv('COURTLISTENER_DELAY', '13.0'))
+        return float(os.getenv("COURTLISTENER_DELAY", "13.0"))
 
     @inter_page_delay.setter
     def inter_page_delay(self, value: float):
         """Set delay between paginated requests in seconds"""
-        os.environ['COURTLISTENER_DELAY'] = str(value)
+        os.environ["COURTLISTENER_DELAY"] = str(value)
 
 
 # Global config instance
