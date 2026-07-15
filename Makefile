@@ -63,14 +63,14 @@ publish: build
 	uv publish
 
 lint:
-	-ruff check src/ tests/ --fix
-	-ruff format src/ tests/
+	-uv run --extra dev ruff check src/ tests/ --fix
+	-uv run --extra dev ruff format src/ tests/
 
 format:
-	-ruff format src/ tests/
+	-uv run --extra dev ruff format src/ tests/
 
 test:
-	python3 -m pytest tests/ -v --tb=short
+	uv run --extra dev python -m pytest tests/ -v --tb=short
 
 run:
 	$(PROJECT_NAME) --help

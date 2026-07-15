@@ -39,6 +39,10 @@ Repository = "https://github.com/miguelfg/courtlistener-cli.git"
 Issues = "https://github.com/miguelfg/courtlistener-cli/issues"
 
 [project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.4",
+]
 docs = [
     "mkdocs>=1.6.0; python_version >= '3.9'",
     "mkdocs-material>=9.5.0; python_version >= '3.9'",
