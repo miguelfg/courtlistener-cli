@@ -30,11 +30,13 @@ def _extract_documents(recap_docs: List[Dict[str, Any]]) -> List[Dict[str, Any]]
         # Trim to first sentence or 120 chars
         first_sentence = raw_label.split(".")[0].strip()
         label = first_sentence[:120] if first_sentence else raw_label[:120]
-        docs.append({
-            "url": BASE_URL + doc["absolute_url"],
-            "label": label,
-            "date_filed": doc.get("entry_date_filed", ""),
-        })
+        docs.append(
+            {
+                "url": BASE_URL + doc["absolute_url"],
+                "label": label,
+                "date_filed": doc.get("entry_date_filed", ""),
+            }
+        )
     return docs
 
 

@@ -1,7 +1,6 @@
 """Click commands for parties resource (PACER case parties)"""
 
 import click
-import json
 from ..client import CourtListenerClient
 from ..output import save_json, save_csv, save_xlsx
 from ..pagination import paginate_endpoint
@@ -14,19 +13,38 @@ def parties():
     pass
 
 
-@parties.command('list')
-@click.option('--docket', default=None, type=int,
-              help='Filter to parties for a specific docket ID')
-@click.option('--filter-nested-results', is_flag=True, default=False,
-              help='Filter nested attorney data to match the docket filter')
-@click.option('--limit', default=20, type=int,
-              help='Total results to export; 0 with --max-pages 0 = all results')
-@click.option('--max-pages', default=10, type=int,
-              help='Maximum pages to fetch (0 = no page cap)')
-@click.option('--format', 'output_format', default='json',
-              type=click.Choice(['json', 'csv', 'xlsx']))
-@click.option('--output', 'output_path', default='./output', type=click.Path())
-def list_parties(docket, filter_nested_results, limit, max_pages, output_format, output_path):
+@parties.command("list")
+@click.option(
+    "--docket",
+    default=None,
+    type=int,
+    help="Filter to parties for a specific docket ID",
+)
+@click.option(
+    "--filter-nested-results",
+    is_flag=True,
+    default=False,
+    help="Filter nested attorney data to match the docket filter",
+)
+@click.option(
+    "--limit",
+    default=20,
+    type=int,
+    help="Total results to export; 0 with --max-pages 0 = all results",
+)
+@click.option(
+    "--max-pages", default=10, type=int, help="Maximum pages to fetch (0 = no page cap)"
+)
+@click.option(
+    "--format",
+    "output_format",
+    default="json",
+    type=click.Choice(["json", "csv", "xlsx"]),
+)
+@click.option("--output", "output_path", default="./output", type=click.Path())
+def list_parties(
+    docket, filter_nested_results, limit, max_pages, output_format, output_path
+):
     """List parties in PACER cases.
 
     Note: nested attorney data is NOT filtered to the docket by default.
@@ -36,13 +54,13 @@ def list_parties(docket, filter_nested_results, limit, max_pages, output_format,
 
     params = {}
     if docket is not None:
-        params['docket'] = docket
+        params["docket"] = docket
     if filter_nested_results:
-        params['filter_nested_results'] = True
+        params["filter_nested_results"] = True
 
     try:
         output_data = paginate_endpoint(
-            fetch_page=lambda p: client.get('/parties/', params=p),
+            fetch_page=lambda p: client.get("/parties/", params=p),
             initial_params=params,
             limit=limit,
             max_pages=max_pages,
@@ -55,13 +73,13 @@ def list_parties(docket, filter_nested_results, limit, max_pages, output_format,
         output_dir = Path(output_path)
         output_dir.mkdir(exist_ok=True)
 
-        if 'results' in output_data:
-            if output_format == 'json':
+        if "results" in output_data:
+            if output_format == "json":
                 filepath = save_json(output_data, output_dir)
-            elif output_format == 'csv':
-                filepath = save_csv(output_data['results'], output_dir)
+            elif output_format == "csv":
+                filepath = save_csv(output_data["results"], output_dir)
             else:
-                filepath = save_xlsx(output_data['results'], output_dir)
+                filepath = save_xlsx(output_data["results"], output_dir)
 
             click.echo(f"✓ Found {output_data.get('count', 0)} total parties")
             click.echo(f"✓ Exported {output_data.get('returned_count', 0)} parties")
@@ -72,7 +90,9 @@ def list_parties(docket, filter_nested_results, limit, max_pages, output_format,
     except Exception as e:
         error = str(e)
         if "401" in error or "Unauthorized" in error:
-            click.echo("Authentication failed. Set COURTLISTENER_API_TOKEN with your API token.")
+            click.echo(
+                "Authentication failed. Set COURTLISTENER_API_TOKEN with your API token."
+            )
         else:
             click.echo(f"Error: {error}")
         raise SystemExit(1)

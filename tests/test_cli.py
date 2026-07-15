@@ -11,25 +11,25 @@ from src.cli import main
 def test_cli_help():
     """Test CLI help command"""
     runner = CliRunner()
-    result = runner.invoke(main, ['--help'])
+    result = runner.invoke(main, ["--help"])
     assert result.exit_code == 0
-    assert 'CourtListener' in result.output
+    assert "CourtListener" in result.output
 
 
 def test_cli_version():
     """Test CLI version"""
     runner = CliRunner()
-    result = runner.invoke(main, ['--version'])
+    result = runner.invoke(main, ["--version"])
     assert result.exit_code == 0
-    assert '1.0.0' in result.output
+    assert "1.0.0" in result.output
 
 
 def test_opinions_help():
     """Test opinions command help"""
     runner = CliRunner()
-    result = runner.invoke(main, ['opinions', '--help'])
+    result = runner.invoke(main, ["opinions", "--help"])
     assert result.exit_code == 0
-    assert 'opinions' in result.output.lower()
+    assert "opinions" in result.output.lower()
 
 
 def test_opinions_list_shows_token_hint_on_auth_error(monkeypatch):
@@ -38,7 +38,9 @@ def test_opinions_list_shows_token_hint_on_auth_error(monkeypatch):
     def mock_get(self, endpoint, **kwargs):
         raise Exception("401 Unauthorized")
 
-    monkeypatch.setattr("src.commands.opinions_commands.CourtListenerClient.get", mock_get)
+    monkeypatch.setattr(
+        "src.commands.opinions_commands.CourtListenerClient.get", mock_get
+    )
 
     runner = CliRunner()
     result = runner.invoke(main, ["opinions", "list", "--limit", "10"])
@@ -74,7 +76,9 @@ def test_dockets_list_batch_csv_uses_column_values(monkeypatch, tmp_path):
         calls.append((endpoint, kwargs.get("params")))
         return {"count": 1, "results": [{"id": len(calls), "case_name": "Case"}]}
 
-    monkeypatch.setattr("src.commands.dockets_commands.CourtListenerClient.get", mock_get)
+    monkeypatch.setattr(
+        "src.commands.dockets_commands.CourtListenerClient.get", mock_get
+    )
 
     output_dir = tmp_path / "out"
     runner = CliRunner()
@@ -112,7 +116,9 @@ def test_dockets_list_batch_treats_docket_column_as_id(monkeypatch, tmp_path):
         calls.append((endpoint, kwargs.get("params")))
         return {"id": 70265088, "case_name": "United States v. Loredo"}
 
-    monkeypatch.setattr("src.commands.dockets_commands.CourtListenerClient.get", mock_get)
+    monkeypatch.setattr(
+        "src.commands.dockets_commands.CourtListenerClient.get", mock_get
+    )
 
     output_dir = tmp_path / "out"
     runner = CliRunner()
@@ -142,7 +148,9 @@ def test_dockets_list_filters_by_docket_number(monkeypatch, tmp_path):
         calls.append((endpoint, kwargs.get("params")))
         return {"count": 1, "results": [{"id": 4214664}]}
 
-    monkeypatch.setattr("src.commands.dockets_commands.CourtListenerClient.get", mock_get)
+    monkeypatch.setattr(
+        "src.commands.dockets_commands.CourtListenerClient.get", mock_get
+    )
 
     output_dir = tmp_path / "out"
     runner = CliRunner()
@@ -174,8 +182,9 @@ def test_dockets_list_filters_by_docket_number(monkeypatch, tmp_path):
         ("none", ""),
     ],
 )
-def test_download_docs_folder_name_mode_controls_output_dir(monkeypatch, tmp_path,
-                                                            folder_name_mode, expected_suffix):
+def test_download_docs_folder_name_mode_controls_output_dir(
+    monkeypatch, tmp_path, folder_name_mode, expected_suffix
+):
     """download-docs should let users choose how the output folder is named."""
     calls = []
 
@@ -190,13 +199,22 @@ def test_download_docs_folder_name_mode_controls_output_dir(monkeypatch, tmp_pat
     def mock_try_csv_export(url, client, case_dir):
         return []
 
-    def mock_save_xlsx(data, output_path, include_timestamp=False, filename_stem="results",
-                       concat_list_fields_char=';'):
+    def mock_save_xlsx(
+        data,
+        output_path,
+        include_timestamp=False,
+        filename_stem="results",
+        concat_list_fields_char=";",
+    ):
         calls.append((Path(output_path), filename_stem))
         return Path(output_path) / f"{filename_stem}.xlsx"
 
-    monkeypatch.setattr("src.commands.dockets_commands.CourtListenerClient.get", mock_get)
-    monkeypatch.setattr("src.commands.dockets_commands._try_csv_export", mock_try_csv_export)
+    monkeypatch.setattr(
+        "src.commands.dockets_commands.CourtListenerClient.get", mock_get
+    )
+    monkeypatch.setattr(
+        "src.commands.dockets_commands._try_csv_export", mock_try_csv_export
+    )
     monkeypatch.setattr("src.commands.dockets_commands.save_xlsx", mock_save_xlsx)
 
     output_dir = tmp_path / "pdfs" / "68608890"
@@ -242,7 +260,9 @@ def test_search_query_paginates_until_requested_limit(monkeypatch, tmp_path):
             return page_2
         raise AssertionError(f"Unexpected cursor: {cursor}")
 
-    monkeypatch.setattr("src.commands.search_commands.CourtListenerClient.get", mock_get)
+    monkeypatch.setattr(
+        "src.commands.search_commands.CourtListenerClient.get", mock_get
+    )
 
     output_dir = tmp_path / "out"
     runner = CliRunner()
@@ -298,7 +318,9 @@ def test_search_query_without_limit_uses_default_limit(monkeypatch, tmp_path):
             return page_3
         raise AssertionError(f"Unexpected cursor: {cursor}")
 
-    monkeypatch.setattr("src.commands.search_commands.CourtListenerClient.get", mock_get)
+    monkeypatch.setattr(
+        "src.commands.search_commands.CourtListenerClient.get", mock_get
+    )
 
     output_dir = tmp_path / "out"
     runner = CliRunner()
@@ -349,7 +371,9 @@ def test_search_query_limit_zero_respects_default_max_pages(monkeypatch, tmp_pat
             "next": next_url,
         }
 
-    monkeypatch.setattr("src.commands.search_commands.CourtListenerClient.get", mock_get)
+    monkeypatch.setattr(
+        "src.commands.search_commands.CourtListenerClient.get", mock_get
+    )
 
     output_dir = tmp_path / "out"
     runner = CliRunner()
@@ -401,7 +425,9 @@ def test_search_query_limit_zero_and_max_pages_zero_fetches_all(monkeypatch, tmp
             "next": next_url,
         }
 
-    monkeypatch.setattr("src.commands.search_commands.CourtListenerClient.get", mock_get)
+    monkeypatch.setattr(
+        "src.commands.search_commands.CourtListenerClient.get", mock_get
+    )
 
     output_dir = tmp_path / "out"
     runner = CliRunner()
@@ -448,13 +474,24 @@ def test_opinions_list_paginates_until_limit(monkeypatch, tmp_path):
         cursor = kwargs.get("params", {}).get("cursor")
         return page_1 if cursor is None else page_2
 
-    monkeypatch.setattr("src.commands.opinions_commands.CourtListenerClient.get", mock_get)
+    monkeypatch.setattr(
+        "src.commands.opinions_commands.CourtListenerClient.get", mock_get
+    )
 
     output_dir = tmp_path / "out"
     runner = CliRunner()
     result = runner.invoke(
         main,
-        ["opinions", "list", "--limit", "25", "--format", "json", "--output", str(output_dir)],
+        [
+            "opinions",
+            "list",
+            "--limit",
+            "25",
+            "--format",
+            "json",
+            "--output",
+            str(output_dir),
+        ],
     )
 
     assert result.exit_code == 0
@@ -487,7 +524,9 @@ def test_courts_list_limit_zero_max_pages_zero_fetches_all(monkeypatch, tmp_path
         cursor = kwargs.get("params", {}).get("cursor")
         return pages[cursor]
 
-    monkeypatch.setattr("src.commands.courts_commands.CourtListenerClient.get", mock_get)
+    monkeypatch.setattr(
+        "src.commands.courts_commands.CourtListenerClient.get", mock_get
+    )
 
     output_dir = tmp_path / "out"
     runner = CliRunner()
@@ -530,7 +569,9 @@ def test_people_list_limit_zero_respects_max_pages(monkeypatch, tmp_path):
             "next": "https://www.courtlistener.com/api/rest/v4/people/?cursor=3",
         }
 
-    monkeypatch.setattr("src.commands.people_commands.CourtListenerClient.get", mock_get)
+    monkeypatch.setattr(
+        "src.commands.people_commands.CourtListenerClient.get", mock_get
+    )
 
     output_dir = tmp_path / "out"
     runner = CliRunner()
@@ -579,7 +620,16 @@ def test_audio_list_paginates_until_limit(monkeypatch, tmp_path):
     runner = CliRunner()
     result = runner.invoke(
         main,
-        ["audio", "list", "--limit", "25", "--format", "json", "--output", str(output_dir)],
+        [
+            "audio",
+            "list",
+            "--limit",
+            "25",
+            "--format",
+            "json",
+            "--output",
+            str(output_dir),
+        ],
     )
 
     assert result.exit_code == 0
@@ -605,7 +655,9 @@ def test_docket_entries_paginates_until_limit(monkeypatch, tmp_path):
         cursor = kwargs.get("params", {}).get("cursor")
         return page_1 if cursor is None else page_2
 
-    monkeypatch.setattr("src.commands.dockets_commands.CourtListenerClient.get", mock_get)
+    monkeypatch.setattr(
+        "src.commands.dockets_commands.CourtListenerClient.get", mock_get
+    )
 
     output_dir = tmp_path / "out"
     runner = CliRunner()
@@ -661,7 +713,12 @@ def test_docket_entries_paginates_until_limit(monkeypatch, tmp_path):
             ["audio", "count", "--court", "ca9", "--year", "2020"],
             "src.commands.audio_commands.CourtListenerClient.get",
             "/audio/",
-            {"page_size": 1, "docket__court": "ca9", "date_argued_gte": "2020-01-01", "date_argued_lte": "2020-12-31"},
+            {
+                "page_size": 1,
+                "docket__court": "ca9",
+                "date_argued_gte": "2020-01-01",
+                "date_argued_lte": "2020-12-31",
+            },
         ),
         (
             ["search", "count", "--q", "Miranda", "--type", "r"],
@@ -671,7 +728,9 @@ def test_docket_entries_paginates_until_limit(monkeypatch, tmp_path):
         ),
     ],
 )
-def test_count_commands_return_only_total(monkeypatch, command, module_path, expected_endpoint, expected_params):
+def test_count_commands_return_only_total(
+    monkeypatch, command, module_path, expected_endpoint, expected_params
+):
     """Count subcommands should print the API count and request minimal payloads."""
     calls = []
 

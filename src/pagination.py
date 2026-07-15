@@ -44,7 +44,7 @@ def paginate_endpoint(
         try:
             result = fetch_page(request_params)
         except DailyQuotaExceeded as exc:
-            print(f'  ✗ {exc}')
+            print(f"  ✗ {exc}")
             return {
                 "count": total_count,
                 "returned_count": len(all_results),
@@ -63,7 +63,9 @@ def paginate_endpoint(
 
         all_results.extend(page_results)
         if progress_logger:
-            progress_logger(pages_fetched, len(page_results), len(all_results), target_total)
+            progress_logger(
+                pages_fetched, len(page_results), len(all_results), target_total
+            )
 
         if target_total is not None and len(all_results) >= target_total:
             all_results = all_results[:target_total]

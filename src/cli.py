@@ -22,10 +22,10 @@ from .commands.tags_commands import tags
 
 
 @click.group()
-@click.version_option(version='1.0.0')
-@click.option('--no-cache', is_flag=True, help='Disable local caching for this request')
-@click.option('--screen', is_flag=True, help='Print results to screen (JSON format)')
-@click.option('--delay', type=float, help='Delay between paginated requests (seconds)')
+@click.version_option(version="1.0.0")
+@click.option("--no-cache", is_flag=True, help="Disable local caching for this request")
+@click.option("--screen", is_flag=True, help="Print results to screen (JSON format)")
+@click.option("--delay", type=float, help="Delay between paginated requests (seconds)")
 @click.pass_context
 def main(ctx, no_cache, screen, delay):
     """CourtListener REST API Python CLI Client
@@ -34,12 +34,12 @@ def main(ctx, no_cache, screen, delay):
     oral arguments, judge information, and financial disclosures.
     """
     ctx.ensure_object(dict)
-    ctx.obj['no_cache'] = no_cache
-    ctx.obj['screen'] = screen
-    
+    ctx.obj["no_cache"] = no_cache
+    ctx.obj["screen"] = screen
+
     if delay is not None:
         config.inter_page_delay = delay
-        ctx.obj['delay'] = delay
+        ctx.obj["delay"] = delay
 
 
 # Existing command groups
@@ -53,17 +53,17 @@ main.add_command(batch)
 
 # New command groups from PRD scaffold
 main.add_command(clusters)
-main.add_command(docket_entries, 'docket-entries')
-main.add_command(recap_documents, 'recap-documents')
+main.add_command(docket_entries, "docket-entries")
+main.add_command(recap_documents, "recap-documents")
 main.add_command(parties)
 main.add_command(attorneys)
 main.add_command(positions)
 main.add_command(financial)
 main.add_command(alerts)
-main.add_command(docket_alerts, 'docket-alerts')
-main.add_command(citation_lookup, 'citation-lookup')
+main.add_command(docket_alerts, "docket-alerts")
+main.add_command(citation_lookup, "citation-lookup")
 main.add_command(tags)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
