@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "courtlistener-cli"
-version = "1.0.0"
+version = "1.0.1"
 description = "Python CLI client for CourtListener REST API"
 readme = "README.md"
 license = {text = "CC0"}
@@ -62,7 +62,7 @@ testpaths = ["tests"]
 addopts = "-v --tb=short"
 
 [tool.bumpversion]
-current_version = "1.0.0"
+current_version = "1.0.1"
 commit = true
 tag = true
 tag_name = "v{new_version}"
