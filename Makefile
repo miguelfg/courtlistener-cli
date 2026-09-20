@@ -1,6 +1,6 @@
 # CourtListener Python CLI - Development Makefile
 
-.PHONY: install install-dev install-docs docs-build docs-serve lint format test run build publish help clean search-slim-example docket-69717740 dockets-list docket-4134326-download-docs docket-4134326-parties
+.PHONY: install install-dev install-docs docs-build docs-serve lint format test run build publish bump-patch bump-minor bump-major push-release help clean search-slim-example docket-69717740 dockets-list docket-4134326-download-docs docket-4134326-parties
 
 PROJECT_NAME = courtlistener-cli
 
@@ -20,6 +20,10 @@ help:
 	@echo "Publishing:"
 	@echo "  make build            Build distribution packages (sdist and wheel)"
 	@echo "  make publish          Publish packages to PyPI (requires token)"
+	@echo "  make bump-patch       Bump patch version (1.0.0 -> 1.0.1), commit, and tag"
+	@echo "  make bump-minor       Bump minor version (1.0.0 -> 1.1.0), commit, and tag"
+	@echo "  make bump-major       Bump major version (1.0.0 -> 2.0.0), commit, and tag"
+	@echo "  make push-release     Push commit + tag to origin (triggers PyPI publish workflow)"
 	@echo ""
 	@echo "Development:"
 	@echo "  make lint             Run code linting (ruff)"
@@ -61,6 +65,18 @@ build:
 publish: build
 	@echo "Publishing to PyPI..."
 	uv publish
+
+bump-patch:
+	uvx bump-my-version bump patch
+
+bump-minor:
+	uvx bump-my-version bump minor
+
+bump-major:
+	uvx bump-my-version bump major
+
+push-release:
+	git push origin main --follow-tags
 
 lint:
 	-uv run --extra dev ruff check src/ tests/ --fix
