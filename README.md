@@ -20,13 +20,10 @@ Documentation: <https://miguelfg.github.io/courtlistener-cli/>
 ## Installation
 
 ```bash
-# Using uv (recommended)
-make install        # uv sync
-make install-dev    # editable install with dev extras
-
-# Or manually
-uv pip install -e .
+pip install courtlistener-cli
 ```
+
+For local development instead, see [Development](#development).
 
 ## Quick Start
 
@@ -598,6 +595,8 @@ courtlistener-cli search query --q '"serial number" firearm' --limit 0 --max-pag
 ## Development
 
 ```bash
+git clone https://github.com/miguelfg/courtlistener-cli.git
+cd courtlistener-cli
 make install-dev    # editable install with dev extras
 make lint           # ruff check --fix + ruff format
 make test           # pytest -v --tb=short

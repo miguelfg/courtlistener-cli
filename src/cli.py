@@ -21,7 +21,7 @@ from .commands.citation_lookup_commands import citation_lookup
 from .commands.tags_commands import tags
 
 
-@click.group()
+@click.group(context_settings={"help_option_names": ["-h", "--help"]})
 @click.version_option(version="1.0.0")
 @click.option("--no-cache", is_flag=True, help="Disable local caching for this request")
 @click.option("--screen", is_flag=True, help="Print results to screen (JSON format)")
