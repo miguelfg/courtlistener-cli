@@ -8,6 +8,12 @@ Python CLI tool for the [CourtListener REST API v4](https://www.courtlistener.co
 
 Documentation: <https://miguelfg.github.io/courtlistener-cli/>
 
+<p align="center">
+  <video src="media/demo/search.mp4" controls width="640">
+    See <code>media/demo/search.mp4</code>
+  </video>
+</p>
+
 ## Features
 
 - **18 command groups** — opinions, dockets, clusters, PACER entries/documents, parties, attorneys, people, positions, financial disclosures, oral arguments, search, alerts, citation lookup, tags
