@@ -8,6 +8,12 @@ Python CLI tool for the [CourtListener REST API v4](https://www.courtlistener.co
 
 Documentation: <https://miguelfg.github.io/courtlistener-cli/>
 
+> **🤖 AI clients:** this repo ships an agent skill at [`.claude/skills/courtlistener-cli/`](.claude/skills/courtlistener-cli/SKILL.md) that teaches Claude, Codex, Antigravity, and other AI coding tools how to run, query, and analyze results with this CLI. Point your client's skills/commands directory at it (or copy it in) to enable it.
+
+<p align="center">
+  <img src="docs/assets/claude-skill-demo.png" alt="Claude using the courtlistener-cli skill to find court cases related to Elon Musk companies" width="720">
+</p>
+
 <p align="center">
   <video src="media/demo/search.mp4" controls width="640">
     See <code>media/demo/search.mp4</code>
