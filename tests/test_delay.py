@@ -62,3 +62,37 @@ def test_pagination_uses_delay():
         # Should sleep exactly once between page 1 and page 2
         # After page 2, next is None, so it breaks before sleep.
         mock_sleep.assert_called_once_with(3.3)
+
+
+def test_pagination_trims_to_limit_across_pages():
+    """limit caps total rows even when a page overshoots the remainder."""
+    from src.pagination import paginate_endpoint
+
+    pages = [
+        {"count": 10, "results": [{"id": i} for i in range(4)], "next": "http://api/2"},
+        {"count": 10, "results": [{"id": i} for i in range(4, 8)], "next": None},
+    ]
+    calls = iter(pages)
+
+    result = paginate_endpoint(
+        fetch_page=lambda params: next(calls),
+        initial_params={},
+        limit=5,
+        max_pages=0,
+    )
+    assert result["returned_count"] == 5
+    assert [r["id"] for r in result["results"]] == [0, 1, 2, 3, 4]
+
+
+def test_pagination_count_falls_back_when_api_omits_count():
+    """Endpoints like /tag/ send no count; report rows fetched instead of 0."""
+    from src.pagination import paginate_endpoint
+
+    page = {"results": [{"id": 1}, {"id": 2}], "next": None}
+    result = paginate_endpoint(
+        fetch_page=lambda params: page,
+        initial_params={},
+        limit=0,
+        max_pages=0,
+    )
+    assert result["count"] == 2

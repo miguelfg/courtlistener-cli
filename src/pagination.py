@@ -61,6 +61,8 @@ def paginate_endpoint(
         if not isinstance(page_results, list):
             page_results = []
 
+        if target_total is not None:
+            page_results = page_results[: target_total - len(all_results)]
         all_results.extend(page_results)
         if progress_logger:
             progress_logger(
@@ -68,7 +70,6 @@ def paginate_endpoint(
             )
 
         if target_total is not None and len(all_results) >= target_total:
-            all_results = all_results[:target_total]
             break
 
         next_url = result.get("next")
@@ -79,7 +80,8 @@ def paginate_endpoint(
             time.sleep(inter_page_delay)
 
     return {
-        "count": total_count,
+        # Some endpoints (e.g. /tag/) send no count; fall back to what we got.
+        "count": total_count or len(all_results),
         "returned_count": len(all_results),
         "pages_fetched": pages_fetched,
         "results": all_results,
