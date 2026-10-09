@@ -35,6 +35,7 @@ site/
 *.log
 logs/
 output/
+out/
 
 # Local environment files
 .env
