@@ -10,9 +10,25 @@ Documentation: <https://miguelfg.github.io/courtlistener-cli/>
 
 > **🤖 AI clients:** this repo ships an agent skill at [`.claude/skills/courtlistener-cli/`](.claude/skills/courtlistener-cli/SKILL.md) that teaches Claude, Codex, Antigravity, and other AI coding tools how to run, query, and analyze results with this CLI. Point your client's skills/commands directory at it (or copy it in) to enable it.
 
+### See it in action
+
+An AI client asked to *"find court cases related to any Elon Musk company"* — the skill drives this CLI end to end: it course-corrects a noisy search into precise case-name queries, breaks the results down by company, opens the live CourtListener docket, downloads the primary-source DOJ complaint, and extracts the attorneys of record.
+
 <p align="center">
-  <img src="docs/assets/claude-skill-demo.png" alt="Claude using the courtlistener-cli skill to find court cases related to Elon Musk companies" width="720">
+  <img src="docs/assets/demo/skill-demo.webp" alt="Claude using the courtlistener-cli skill to investigate court cases tied to Elon Musk companies" width="820">
 </p>
+
+<details>
+<summary>See each step as a still image</summary>
+
+<img src="docs/assets/demo/slide-1.png" alt="A plain-English investigative question" width="820">
+<img src="docs/assets/demo/slide-2.png" alt="The model course-corrects to narrow case-name searches" width="820">
+<img src="docs/assets/demo/slide-3.png" alt="A breakdown of cases by company" width="820">
+<img src="docs/assets/demo/slide-4.png" alt="Straight to the live CourtListener docket" width="820">
+<img src="docs/assets/demo/slide-5.png" alt="Pulls the primary-source DOJ complaint PDF" width="820">
+<img src="docs/assets/demo/slide-6.png" alt="Extracts the attorneys-of-record table" width="820">
+
+</details>
 
 <p align="center">
   <video src="media/demo/search.mp4" controls width="640">
