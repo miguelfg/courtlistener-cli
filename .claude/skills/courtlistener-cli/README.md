@@ -1,6 +1,6 @@
 # courtlistener-cli skill
 
-Claude Code skill for running and analyzing [CourtListener API](https://www.courtlistener.com/help/api/rest/) queries through this repo's CLI. Claude picks the right command, plans around rate limits (5 req/min, 125/day), exports JSON/CSV/XLSX, and profiles the results with `scripts/result_stats.py`.
+Claude Code skill (version 1.0.2) for running and analyzing [CourtListener API](https://www.courtlistener.com/help/api/rest/) queries through this repo's CLI. Claude picks the right command, plans around rate limits (5 req/min, 125/day), exports JSON/CSV/XLSX, and profiles the results with `scripts/result_stats.py`.
 
 ## Example prompts → commands they trigger
 

@@ -9,7 +9,7 @@ def test_headers_without_api_token_omit_authorization():
 
     assert "Authorization" not in headers
     assert headers["Content-Type"] == "application/json"
-    assert headers["User-Agent"] == "courtlistener-cli/1.0.0"
+    assert headers["User-Agent"] == "courtlistener-cli/1.0.2"
 
 
 def test_headers_with_api_token_include_authorization():

@@ -12,6 +12,7 @@ from ..output import save_json, save_csv, save_xlsx
 from ..pagination import paginate_endpoint
 from pathlib import Path
 from typing import List, Optional
+from .. import __version__
 
 logger = logging.getLogger(__name__)
 
@@ -489,7 +490,7 @@ def download_docs(docket_id, output_path, manifest_format, all_docs, folder_name
         # --- 4. Download available PDFs ---
         downloaded = 0
         skipped = 0
-        download_headers = {"User-Agent": "courtlistener-cli/1.0.0"}
+        download_headers = {"User-Agent": f"courtlistener-cli/{__version__}"}
 
         for row in doc_rows:
             if not row["is_available"] or not row["pdf_filename"]:

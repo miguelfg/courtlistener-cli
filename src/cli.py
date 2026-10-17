@@ -1,6 +1,7 @@
 """Main Click CLI entry point for CourtListener"""
 
 import click
+from . import __version__
 from .config import config
 from .commands.opinions_commands import opinions
 from .commands.search_commands import search
@@ -23,7 +24,7 @@ from .commands.doctor_commands import doctor
 
 
 @click.group(context_settings={"help_option_names": ["-h", "--help"]})
-@click.version_option(version="1.0.0")
+@click.version_option(version=__version__)
 @click.option("--no-cache", is_flag=True, help="Disable local caching for this request")
 @click.option("--screen", is_flag=True, help="Print results to screen (JSON format)")
 @click.option("--delay", type=float, help="Delay between paginated requests (seconds)")

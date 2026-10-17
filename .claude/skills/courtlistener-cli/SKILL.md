@@ -1,6 +1,7 @@
 ---
 name: courtlistener-cli
 description: This skill should be used when running, querying, or analyzing results from the courtlistener-cli tool — a Python Click CLI for the CourtListener REST API v4 (case law opinions, PACER dockets/entries/documents, parties, attorneys, judges, financial disclosures, oral arguments, search, alerts, citation lookup). Covers setup, every command and its parameters, rate-limit-aware query planning, batch processing, and post-processing exported JSON/CSV/XLSX results into stats and insights.
+version: 1.0.2
 ---
 
 # CourtListener CLI

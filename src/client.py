@@ -4,6 +4,7 @@ import time
 import logging
 import httpx
 import click
+from . import __version__
 from typing import Any, Dict, Optional
 from .config import config
 
@@ -53,7 +54,7 @@ class CourtListenerClient:
         """Get HTTP headers with authentication"""
         headers = {
             "Content-Type": "application/json",
-            "User-Agent": "courtlistener-cli/1.0.0",
+            "User-Agent": f"courtlistener-cli/{__version__}",
         }
         if self.api_token:
             headers["Authorization"] = f"Token {self.api_token}"
