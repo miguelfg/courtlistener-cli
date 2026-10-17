@@ -100,7 +100,7 @@ Note the fan-out: one docket number can match several dockets (per-defendant cri
 claude -p "Check whether the citations in this text are real: Obergefell v. Hodges (576 U.S. 644) established the right to marriage, following Roe v. Wade (410 U.S. 113)."
 ```
 
-Skill runs `citation-lookup text --text "..."` and reports per citation: found (200), not found (404 — possible hallucination), ambiguous (300), with the matched clusters.
+Skill runs `citation-lookup text --text "..."` and reports per citation: found (200), not found (404 — possible hallucination), ambiguous (300), with the matched clusters. For a saved brief or OCR transcription, it uses `citation-lookup batch --input citations.txt`; the file is sent as one payload, subject to the same 64,000-character and 250-citation limits.
 
 <!-- TODO screenshot: verdict list with statuses -->
 

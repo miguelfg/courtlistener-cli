@@ -63,6 +63,7 @@ Claude Code skill for running and analyzing [CourtListener API](https://www.cour
 |---|---|
 | "List recent SCOTUS oral argument recordings" | `audio list --court scotus --limit 20` |
 | "Check whether the citations in this paragraph are real" | `citation-lookup text --text "..."` |
+| "Audit citations in this brief or OCR file" | `citation-lookup batch --input citations.txt` |
 | "Verify 576 U.S. 644" | `citation-lookup citation --volume 576 --reporter "U.S." --page 644` |
 | "Alert me daily about new Apple filings" | `alerts create --name ... --query 'q=%22Apple%22&type=r' --rate dly --alert-type r` |
 | "Notify me of updates on docket 4214664" | `docket-alerts create --docket 4214664` |

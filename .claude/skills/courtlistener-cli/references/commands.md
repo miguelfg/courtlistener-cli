@@ -267,8 +267,23 @@ Options:
   --help  Show this message and exit.
 
 Commands:
+  batch      Look up citations from a text file in one API request.
   citation  Look up a single citation by volume, reporter, and page.
   text      Find and verify all citations in a block of text.
+```
+
+## `courtlistener-cli citation-lookup batch`
+
+```text
+Usage: main citation-lookup batch [OPTIONS]
+
+  Look up citations from a text file in one API request.
+
+Options:
+  --input FILE   Text file containing citations to look up in one request
+                 [required]
+  --output PATH
+  --help         Show this message and exit.
 ```
 
 ## `courtlistener-cli citation-lookup citation`

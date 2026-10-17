@@ -49,6 +49,46 @@ def test_opinions_list_shows_token_hint_on_auth_error(monkeypatch):
     assert "COURTLISTENER_API_TOKEN" in result.output
 
 
+def test_citation_lookup_batch_reads_text_file_and_saves_results(monkeypatch, tmp_path):
+    """Batch citation lookup sends the file text in one API request."""
+    input_file = tmp_path / "citations.txt"
+    input_file.write_text("410 U.S. 113\n576 U.S. 644\n")
+    calls = []
+
+    def mock_request(self, method, endpoint, **kwargs):
+        calls.append((method, endpoint, kwargs.get("json")))
+        return [
+            {"citation": "410 U.S. 113", "status": 200},
+            {"citation": "576 U.S. 644", "status": 404},
+        ]
+
+    monkeypatch.setattr(
+        "src.commands.citation_lookup_commands.CourtListenerClient.request",
+        mock_request,
+    )
+
+    output_dir = tmp_path / "out"
+    runner = CliRunner()
+    result = runner.invoke(
+        main,
+        [
+            "citation-lookup",
+            "batch",
+            "--input",
+            str(input_file),
+            "--output",
+            str(output_dir),
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert calls == [
+        ("POST", "/citation-lookup/", {"text": "410 U.S. 113\n576 U.S. 644\n"})
+    ]
+    assert "Found: 1, Not found: 1" in result.output
+    assert json.loads((output_dir / "results.json").read_text())["count"] == 2
+
+
 def test_dockets_list_batch_requires_column(tmp_path):
     """Batch input mode requires --column."""
     input_file = tmp_path / "dockets.csv"

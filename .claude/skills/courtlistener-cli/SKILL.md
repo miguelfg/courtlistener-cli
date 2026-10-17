@@ -98,7 +98,10 @@ limit; lower it via `--delay` only when the user accepts the risk.
   keys. Files land in the `--output` dir with a `YYYYMMDD_HHMMSS` timestamp
   unless `INCLUDE_TIMESTAMP=false`.
 - Financial value codes are ranges (`J` = $1–$15k … `P4` = >$50M), not amounts.
-- Citation lookup limits: 250 citations/request, 64k chars, no statutes/id./supra.
+- Citation lookup accepts `text --text "..."` or `batch --input citations.txt`;
+  both send one text payload (250 citations/request, 64k chars, no
+  statutes/id./supra). Use `batch` for a brief or OCR file and report found,
+  not-found, ambiguous, and throttled counts.
 
 ## Analyzing results
 

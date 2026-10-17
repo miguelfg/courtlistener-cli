@@ -30,6 +30,24 @@ def lookup_text(text, output_format, output_path):
     Limits: 250 citations per request, 60 valid citations/minute, 64,000 chars max.
     Does not look up statutes, id., or supra citations.
     """
+    _lookup_text(text, output_path)
+
+
+@citation_lookup.command("batch")
+@click.option(
+    "--input",
+    "input_path",
+    required=True,
+    type=click.Path(exists=True, dir_okay=False, readable=True),
+    help="Text file containing citations to look up in one request",
+)
+@click.option("--output", "output_path", default="./output", type=click.Path())
+def lookup_batch(input_path, output_path):
+    """Look up citations from a text file in one API request."""
+    _lookup_text(Path(input_path).read_text(), output_path)
+
+
+def _lookup_text(text, output_path):
     if len(text) > 64000:
         click.echo("Error: text exceeds 64,000 character limit", err=True)
         raise SystemExit(1)

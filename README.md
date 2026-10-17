@@ -537,6 +537,9 @@ courtlistener-cli citation-lookup text \
 # Look up a specific citation
 courtlistener-cli citation-lookup citation \
   --volume 576 --reporter "U.S." --page 644
+
+# Audit citations from a brief or OCR text file in one request
+courtlistener-cli citation-lookup batch --input citations.txt
 ```
 
 Response fields: `citation`, `normalized_citations` (corrects typos/non-canonical abbreviations), `status` (200=found, 404=not found, 300=ambiguous, 400=invalid reporter), `clusters` (matching cluster objects).
