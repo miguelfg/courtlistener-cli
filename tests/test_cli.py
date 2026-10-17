@@ -89,6 +89,40 @@ def test_citation_lookup_batch_reads_text_file_and_saves_results(monkeypatch, tm
     assert json.loads((output_dir / "results.json").read_text())["count"] == 2
 
 
+def test_doctor_reports_safe_valid_configuration(monkeypatch):
+    """Doctor validates configured values without exposing credentials."""
+    monkeypatch.setenv("COURTLISTENER_API_TOKEN", "secret-token")
+    monkeypatch.delenv("COURTLISTENER_API_KEY", raising=False)
+    monkeypatch.setenv("COURTLISTENER_BASE_URL", "https://api.example.test/v4")
+    monkeypatch.setenv("COURTLISTENER_TIMEOUT", "45")
+    monkeypatch.setenv("OUTPUT_FORMAT", "json")
+    monkeypatch.setenv("COURTLISTENER_SESSION_ID", "secret-session")
+
+    runner = CliRunner()
+    result = runner.invoke(main, ["doctor"])
+
+    assert result.exit_code == 0
+    assert "API token: loaded" in result.output
+    assert "API base URL: https://api.example.test/v4" in result.output
+    assert "Timeout: 45s" in result.output
+    assert "Output format: json" in result.output
+    assert "Session cookie: configured (optional)" in result.output
+    assert "secret-token" not in result.output
+    assert "secret-session" not in result.output
+
+
+def test_doctor_fails_when_required_token_is_missing(monkeypatch):
+    """Doctor identifies an unusable configuration before a network request."""
+    monkeypatch.delenv("COURTLISTENER_API_TOKEN", raising=False)
+    monkeypatch.delenv("COURTLISTENER_API_KEY", raising=False)
+
+    runner = CliRunner()
+    result = runner.invoke(main, ["doctor"])
+
+    assert result.exit_code == 1
+    assert "COURTLISTENER_API_TOKEN is not configured" in result.output
+
+
 def test_dockets_list_batch_requires_column(tmp_path):
     """Batch input mode requires --column."""
     input_file = tmp_path / "dockets.csv"

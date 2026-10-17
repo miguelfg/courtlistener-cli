@@ -19,6 +19,7 @@ from .commands.financial_disclosures_commands import financial
 from .commands.alerts_commands import alerts, docket_alerts
 from .commands.citation_lookup_commands import citation_lookup
 from .commands.tags_commands import tags
+from .commands.doctor_commands import doctor
 
 
 @click.group(context_settings={"help_option_names": ["-h", "--help"]})
@@ -63,6 +64,7 @@ main.add_command(alerts)
 main.add_command(docket_alerts, "docket-alerts")
 main.add_command(citation_lookup, "citation-lookup")
 main.add_command(tags)
+main.add_command(doctor)
 
 
 if __name__ == "__main__":

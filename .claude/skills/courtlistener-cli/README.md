@@ -4,6 +4,10 @@ Claude Code skill for running and analyzing [CourtListener API](https://www.cour
 
 ## Example prompts → commands they trigger
 
+| Prompt | Command |
+|---|---|
+| "Check whether this CLI is configured without using API quota" | `doctor` |
+
 ### Case law (opinions, clusters)
 
 | Prompt | Command |

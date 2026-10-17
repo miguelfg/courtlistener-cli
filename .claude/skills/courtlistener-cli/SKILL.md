@@ -68,6 +68,16 @@ If false, inspect `.env` var names against `.env.example`. To debug a live
 request, prefix with `LOG_LEVEL=DEBUG` — e.g.
 `LOG_LEVEL=DEBUG uv run courtlistener-cli --screen courts get scotus`.
 
+For a complete local preflight with no quota cost, run:
+
+```bash
+cd "$CLI_HOME" && uv run courtlistener-cli doctor
+```
+
+It validates the token, base URL, timeout and default output format without
+printing secret values; its session-cookie result is informational because that
+cookie is optional except for the faster document-download path.
+
 ## Rate limits — plan before querying
 
 Authenticated quota: **5 req/min, 50 req/hour, 125 req/day**. Every page is one

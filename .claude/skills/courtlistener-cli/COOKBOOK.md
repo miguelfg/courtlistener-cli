@@ -2,6 +2,17 @@
 
 Real sessions run with `claude -p "<prompt>"` from the repo root. Each recipe shows the prompt, what the skill does under the hood, and the result. Every recipe costs real API quota (5 req/min, 125/day) — the skill runs `count` first when a query could fan out.
 
+## 0. Local configuration preflight
+
+```bash
+claude -p "Check whether courtlistener-cli is configured before querying"
+```
+
+Skill runs `doctor`. It consumes no API quota and reports whether the token,
+base URL, timeout and output format are usable without exposing the token or
+session cookie. The session cookie is optional; its absence only means
+`dockets download-docs` will use the slower API-pagination fallback.
+
 ## 1. Recent SCOTUS oral arguments
 
 ```bash

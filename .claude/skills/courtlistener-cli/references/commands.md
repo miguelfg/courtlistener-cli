@@ -29,6 +29,7 @@ Commands:
   courts           Manage court information
   docket-alerts    Manage docket alerts (notifications when a specific case...
   docket-entries   Manage PACER docket entries (rows on a docket)
+  doctor           Check local configuration without making an API request.
   dockets          Manage case dockets
   financial        Financial disclosure records for federal judges (Ethics...
   opinions         Manage opinions (court decisions)
@@ -38,6 +39,17 @@ Commands:
   recap-documents  Manage RECAP Archive documents (PDFs from PACER)
   search           Search across all legal data
   tags             Manage user-created tags linked to dockets
+```
+
+## `courtlistener-cli doctor`
+
+```text
+Usage: main doctor [OPTIONS]
+
+  Check local configuration without making an API request.
+
+Options:
+  --help  Show this message and exit.
 ```
 
 ## `courtlistener-cli alerts`

@@ -70,7 +70,12 @@ Get your token at [courtlistener.com/profile/api/](https://www.courtlistener.com
 ```bash
 courtlistener-cli --version
 courtlistener-cli --help
+courtlistener-cli doctor
 ```
+
+`doctor` validates the local token, API URL, timeout and default output format
+without making an API request or printing secret values. It also reports whether
+the optional session cookie for `dockets download-docs` is configured.
 
 ### 3. First queries
 
